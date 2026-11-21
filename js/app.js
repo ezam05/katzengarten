@@ -19,6 +19,12 @@ const NAMEN = ['Mimi', 'Mochi', 'Luna', 'Tofu', 'Momo', 'Kiki', 'Nala', 'Pünktl
 
 // ---------- Daten und Speichern ----------
 
+// Zufällige Nummer (UUID), z. B. 3f2b…-…
+const neueNummer = () => (crypto.randomUUID ? crypto.randomUUID()
+  : '10000000-1000-4000-8000-100000000000'.replace(/[018]/g, (c) => (c ^ (crypto.getRandomValues(new Uint8Array(1))[0] & (15 >> (c / 4)))).toString(16)));
+const neuesKonto = () => ({ id: neueNummer(), geheim: neueNummer() });
+const istNummer = (t) => typeof t === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(t);
+
 function startDaten() {
   return {
     version: 1,
@@ -26,6 +32,7 @@ function startDaten() {
     streak: 0,
     vortagMl: null,        // Menge vom letzten abgerechneten Tag (für «zwei Tage unter 1,5 l»)
     gestartet: false,      // Willkommen (Name, erstes Kätzchen) schon gemacht?
+    konto: neuesKonto(),   // öffentliche und geheime Nummer für den Server
     demoSichtbar: false,   // Demo-Knopf zeigen (geheim: 3× schnell auf das Holzschild tippen)
     muenzen: 0,
     abgerechnetBis: null,  // letzter abgerechneter Tag, z. B. '2026-11-06'
@@ -65,6 +72,7 @@ function datenLaden() {
         fuetterungen: Array.isArray(d.fuetterungen) ? d.fuetterungen : [],
         garten: Array.isArray(d.garten) ? d.garten : [],
       };
+      if (!istNummer(d.konto?.id) || !istNummer(d.konto?.geheim)) geladen.konto = neuesKonto();
       // wer schon Daten hat, braucht kein Willkommen mehr
       if (d.gestartet === undefined) geladen.gestartet = geladen.eintraege.length > 0 || geladen.garten.length > 0 || geladen.katze.milch > 0;
       // gratis Arten sind immer freigeschaltet
@@ -79,6 +87,7 @@ function speichern() {
   try {
     localStorage.setItem(SPEICHER_NAME, JSON.stringify(daten));
   } catch { /* z. B. privates Fenster: dann eben ohne Speichern */ }
+  spaeterHochladen();
 }
 
 let daten = datenLaden();
@@ -1835,7 +1844,8 @@ $('#demo-fr-fertig').addEventListener('click', () => {
 
 function uhrLink() {
   const k = daten.katze;
-  const p = new URLSearchParams({ n: k.name, a: k.artId, m: k.milch, s: k.status, h: heuteMl(), z: aktuellerZustand(), t: jetzt() });
+  // i/x: öffentliche und geheime Nummer, damit die Uhr live anzeigt und Wasser eintragen kann
+  const p = new URLSearchParams({ n: k.name, a: k.artId, m: k.milch, s: k.status, h: heuteMl(), z: aktuellerZustand(), t: jetzt(), i: daten.konto.id, x: daten.konto.geheim });
   return new URL(`uhr.html#${p}`, location.href).href;
 }
 
@@ -1863,7 +1873,7 @@ async function teilen({ titel, text, url }, erfolg) {
 
 async function aufDieUhr() {
   await teilen({ titel: 'Katzengarten ⌚', text: `${daten.katze.name} für die Apple Watch`, url: uhrLink() },
-    'Öffne den Link auf der Apple Watch, z. B. in Nachrichten antippen ⌚');
+    'Schick den Link nur dir selbst (er enthält deine geheime Nummer) und tipp ihn auf der Uhr an ⌚');
 }
 
 // ---------- Kollegin: einladen, Katze schicken, Katze der Kollegin übernehmen ----------
@@ -1894,13 +1904,7 @@ function auspacken(text) {
 }
 
 function meineKatzeAlsLink(name) {
-  const k = daten.katze;
-  const inhalt = {
-    v: 1, n: name, t: jetzt(), h: heuteMl(), st: daten.streak,
-    k: { n: k.name, a: k.artId, m: k.milch, s: k.status },
-    g: daten.garten.map((e) => [e.artId, e.name, e.datum]),
-  };
-  return `${APP_URL}#freundin=${packen(inhalt)}`;
+  return `${APP_URL}#freundin=${packen(standInhalt(name))}`;
 }
 
 // Daten aus einem fremden Link genau prüfen, bevor sie gespeichert werden
@@ -1912,6 +1916,7 @@ function pruefeFreundin(roh) {
   const stand = zahlIn(roh.t, 0, Date.now() + 400 * TAG_MS);
   return {
     beispiel: false,
+    id: istNummer(roh.i) ? roh.i : null, // mit Server: wird laufend neu geladen
     name: sauber(roh.n, 20) || 'Kollegin',
     katzenName: sauber(roh.k.n) || 'Kätzchen',
     artId: art.id,
@@ -1942,6 +1947,7 @@ function freundinAusLink() {
   speichern();
   zeichne();
   oeffneFreundin();
+  abgleichen(); // gleich den neusten Stand holen
 }
 
 $('#einladen-knopf').addEventListener('click', async () => {
@@ -2038,6 +2044,72 @@ $('#schild').addEventListener('click', () => {
 });
 
 
+// ---------- Server (Vercel): immer aktuell ----------
+// Jedes Handy hat eine öffentliche Nummer (für Freundinnen) und eine geheime (zum Speichern, für die Uhr).
+// Gibt es keinen Server (z. B. auf GitHub Pages), läuft alles wie bisher nur auf dem Handy.
+
+let serverDa = null; // null = noch nicht geprüft, true / false
+var hochladenTimer = null;
+
+async function api(pfad, optionen = {}) {
+  const r = await fetch(`api/${pfad}`, { ...optionen, headers: { 'Content-Type': 'application/json' } });
+  if (!r.ok) throw new Error(`Server ${r.status}`);
+  return r.json();
+}
+
+function standInhalt(name) {
+  const k = daten.katze;
+  return {
+    v: 1, i: daten.konto.id, n: name, t: jetzt(), h: heuteMl(), st: daten.streak,
+    k: { n: k.name, a: k.artId, m: k.milch, s: k.status },
+    g: daten.garten.map((e) => [e.artId, e.name, e.datum]),
+  };
+}
+
+function spaeterHochladen() {
+  if (serverDa === false) return;
+  clearTimeout(hochladenTimer);
+  hochladenTimer = setTimeout(hochladen, 1500);
+}
+
+async function hochladen() {
+  try {
+    await api('stand', { method: 'POST', body: JSON.stringify({ id: daten.konto.id, geheim: daten.konto.geheim, stand: standInhalt(daten.name || '') }) });
+    serverDa = true;
+  } catch { serverDa = false; }
+}
+
+// Wasser von der Uhr abholen und die Katze der Freundin neu laden
+async function abgleichen() {
+  try {
+    const { liste } = await api('trinken', { method: 'POST', body: JSON.stringify({ id: daten.konto.id, geheim: daten.konto.geheim, aktion: 'abholen' }) });
+    serverDa = true;
+    if (liste?.length) {
+      for (const e of liste) daten.eintraege.push({ ml: e.ml, zeit: Math.min(e.zeit, Date.now()) });
+      const portion = fuettereAutomatisch();
+      speichern();
+      letzteZeichnung = '';
+      zeichne();
+      const summe = liste.reduce((s, e) => s + e.ml, 0);
+      kurzeBlase(`⌚ +${dl(summe)} von der Uhr!${portion > 0 ? ' Mmh, Milch 😋' : ''}`, false, 3500);
+    }
+  } catch {
+    if (serverDa === null) serverDa = false;
+    return;
+  }
+  const frId = daten.freundin.id;
+  if (!frId) return;
+  try {
+    const fr = pruefeFreundin(await api(`stand?id=${frId}`));
+    if (fr) {
+      daten.freundin = { ...fr, id: frId };
+      freundinUi.letzteMini = '';
+      speichern();
+      zeichne();
+    }
+  } catch { /* Freundin noch nicht auf dem Server */ }
+}
+
 // ---------- Start ----------
 
 abrechnen();
@@ -2048,8 +2120,10 @@ else oeffneWillkommen(); // ein Katzen-Link wird danach übernommen
 window.addEventListener('hashchange', freundinAusLink); // Link kommt, während die App schon offen ist
 document.fonts?.ready.then(() => { zeigeName(daten.katze.name); if (!blaseTimer) zeigeNormaleBlase(false); });
 // Zustand hängt von der Uhrzeit ab: jede Minute neu prüfen
-setInterval(() => { abrechnen(); zeichne(); }, 60 * 1000);
+setInterval(() => { abrechnen(); zeichne(); abgleichen(); }, 60 * 1000);
+abgleichen();
+hochladen();
 // Beim Zurückkommen in die App (z. B. am Morgen) gleich abrechnen
 document.addEventListener('visibilitychange', () => {
-  if (!document.hidden) { abrechnen(); zeichne(); }
+  if (!document.hidden) { abrechnen(); zeichne(); abgleichen(); }
 });

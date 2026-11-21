@@ -1,0 +1,6 @@
+{
+  "name": "katzengarten",
+  "private": true,
+  "type": "module",
+  "description": "Katzengarten: Webseite (statisch) und Server-Funktionen für Vercel (Ordner api/)"
+}

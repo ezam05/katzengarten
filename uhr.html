@@ -19,6 +19,10 @@
     .klein { margin: 3px 0 0; font-size: 13px; font-weight: 500; color: #B9D9C0; }
     .stand { margin: 6px 0 0; font-size: 11px; color: #7F9C88; }
     .uhr .katze-huelle.federn { animation: federn .6s cubic-bezier(.3, 1.4, .5, 1); }
+    .knoepfe { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin: 8px 0 0; }
+    .knoepfe[hidden] { display: none; }
+    .knoepfe button { min-height: 44px; border: 0; border-radius: 22px; background: #1E88D8; color: #fff; font: 600 14px var(--schrift-titel); }
+    .knoepfe button:active { transform: scale(.94); }
   </style>
 </head>
 <body>
@@ -26,6 +30,9 @@
   <div class="ring"><svg id="ring" viewBox="-100 -100 200 200" role="img" aria-label="Deine Katze"></svg></div>
   <p class="noch" id="noch">…</p>
   <p class="klein" id="klein"></p>
+  <div class="knoepfe" id="knoepfe" hidden>
+    <button type="button" data-ml="100">💧1 dl</button><button type="button" data-ml="250">🥛2,5</button><button type="button" data-ml="500">🍶5 dl</button>
+  </div>
   <p class="stand" id="stand"></p>
 </main>
 <script type="module">
@@ -34,6 +41,22 @@
   import { artNachId, milchBisGross } from './js/arten.js';
   import { zeichneKatze } from './js/katze.js';
   import { ZIEL_ML, tagesSchluessel, eintraegeVomTag, summeMl, katzenZustand, groesseFuerMilch } from './js/regeln.js';
+
+  // Mit Server (Link enthält i = öffentliche, x = geheime Nummer): live anzeigen und Wasser eintragen
+  const hash = new URLSearchParams(location.hash.slice(1));
+  const konto = { id: hash.get('i'), geheim: hash.get('x') };
+  async function vomServer() {
+    if (!konto.id) return null;
+    try {
+      const r = await fetch(`api/stand?id=${encodeURIComponent(konto.id)}`, { cache: 'no-store' });
+      if (!r.ok) return null;
+      const s = await r.json();
+      const heute = tagesSchluessel(Date.now()) === tagesSchluessel(s.t);
+      const heuteMl = heute ? Number(s.h) || 0 : 0;
+      return { name: String(s.k?.n || 'Kätzchen'), artId: s.k?.a, milch: Number(s.k?.m) || 0, status: s.k?.s || 'waechst', heuteMl,
+        zustand: s.k?.s === 'fertig' ? 'fertig' : katzenZustand({ heuteMl, jetzt: Date.now(), letzteTrinkZeit: heute ? s.t : null }), zeit: s.t, live: true };
+    } catch { return null; }
+  }
 
   const zahl = (z) => String(Math.round(z * 100) / 100).replace('.', ',');
   const liter = (ml) => `${zahl(ml / 1000)} l`;
@@ -62,7 +85,9 @@
     } catch { return null; }
   }
 
-  const k = ausLink() || ausApp() || { name: 'Mimi', artId: 'toast', milch: 0, status: 'waechst', heuteMl: 0, zustand: 'traurig', zeit: null };
+  let k = (await vomServer()) || ausLink() || ausApp() || { name: 'Mimi', artId: 'toast', milch: 0, status: 'waechst', heuteMl: 0, zustand: 'traurig', zeit: null };
+
+  function zeige() {
   const art = artNachId(k.artId);
   const bisGross = milchBisGross(art);
   const anteil = Math.min(1, k.heuteMl / ZIEL_ML);
@@ -95,10 +120,33 @@
     document.getElementById('stand').textContent = `Stand ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
   }
   document.getElementById('ring').setAttribute('aria-label', `${k.name}, ${art.name}. ${document.getElementById('noch').textContent}`);
+  }
+  zeige();
+
+  // Wasser eintragen: geht an den Server, das iPhone holt es ab und füttert die Katze
+  const knoepfe = document.getElementById('knoepfe');
+  knoepfe.hidden = !(k.live && konto.geheim);
+  knoepfe.addEventListener('click', async (e) => {
+    const b = e.target.closest('button');
+    if (!b) return;
+    const ml = Number(b.dataset.ml);
+    b.disabled = true;
+    try {
+      const r = await fetch('api/trinken', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: konto.id, geheim: konto.geheim, aktion: 'eintragen', ml }) });
+      if (!r.ok) throw new Error();
+      k = { ...k, heuteMl: k.heuteMl + ml, zustand: 'gluecklich', zeit: Date.now() };
+      zeige();
+      document.getElementById('stand').textContent = `+${String(ml / 100).replace('.', ',')} dl ✓ Das iPhone füttert die Katze.`;
+    } catch {
+      document.getElementById('stand').textContent = 'Kein Netz 😿 Nochmals versuchen.';
+    }
+    b.disabled = false;
+  });
 
   // Antippen: Katze federt
-  const katze = document.getElementById('katze');
-  katze?.addEventListener('click', () => {
+  document.getElementById('ring').addEventListener('click', () => {
+    const katze = document.getElementById('katze');
+    if (!katze) return;
     katze.classList.remove('federn');
     void katze.getBBox();
     katze.classList.add('federn');
