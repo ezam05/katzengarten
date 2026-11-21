@@ -2,6 +2,7 @@
 
 import { ARTEN, artNachId, milchBisGross } from './arten.js';
 import { zeichneKatze, zufall } from './katze.js';
+import { miau, schnurrenStart, schnurrenStopp, plaetschern, tonAn } from './ton.js';
 import {
   STUFEN, ZIEL_ML, stufeFuerMilch, groesseFuerMilch, milchFuerStufe, ZURUECKHOLEN_PREIS, tagesSchluessel, zeitImTag, stundeImTag,
   eintraegeVomTag, summeMl, glaeserBisZiel, katzenZustand, milchPortion,
@@ -33,7 +34,8 @@ function startDaten() {
     vortagMl: null,        // Menge vom letzten abgerechneten Tag (für «zwei Tage unter 1,5 l»)
     gestartet: false,      // Willkommen (Name, erstes Kätzchen) schon gemacht?
     konto: neuesKonto(),   // öffentliche und geheime Nummer für den Server
-    demoSichtbar: false,   // Demo-Knopf zeigen (geheim: 3× schnell auf das Holzschild tippen)
+    demoSichtbar: false,
+    ton: true,             // Miau und Schnurren an   // Demo-Knopf zeigen (geheim: 3× schnell auf das Holzschild tippen)
     muenzen: 0,
     abgerechnetBis: null,  // letzter abgerechneter Tag, z. B. '2026-11-06'
     eintraege: [],         // Getränke { ml, zeit }
@@ -459,6 +461,7 @@ function milchAnimation(portion, danach) {
   void el.szene.getBBox?.();
   el.szene.classList.add('fuettern');
   starteAnimation('schlecken');
+  setTimeout(plaetschern, 500); // Milch fliesst in den Napf
   setTimeout(() => {
     fuettertGerade = false;
     el.szene.classList.remove('fuettern');
@@ -1161,6 +1164,7 @@ function zeigeGartenName(katze) {
 }
 
 function gartenAntippen(katze) {
+  miau({ hoch: 0.9 + Math.random() * 0.3 });
   const schlief = katze.pose === 'schlafen';
   setzePose(katze, 'sitzen');
   katze.el.classList.remove('huepft');
@@ -1223,6 +1227,7 @@ garten.raster.addEventListener('pointermove', (e) => {
     clearTimeout(z.katze.timer);
     if (z.katze.pose !== 'schlafen') setzePose(z.katze, 'sitzen', 'gestreichelt');
     z.katze.el.classList.add('schnurrt');
+    schnurrenStart();
     gartenBlase(z.katze, z.katze.pose === 'schlafen' ? 'Zzz… prrr 💕' : 'Schnurr… 💕');
   }
   if (z.streichelt && z.weg - z.herz > 30) {
@@ -1254,6 +1259,7 @@ function beendeGartenZug(e, abbrechen) {
   }
   if (z.streichelt) {
     katze.el.classList.remove('schnurrt');
+    schnurrenStopp();
     if (katze.pose === 'schlafen') {
       plane(katze, 6000 + Math.random() * 6000); // schläft zufrieden weiter
     } else {
@@ -1329,6 +1335,7 @@ function trinken(ml) {
       milchAnimation(portion, () => {
         if (gross) kurzeBlase('Ich bin gross geworden! 🎉', false, 4000);
         else if (neueStufe !== null) {
+          miau({ hoch: 1.1, lang: 1.2 });
           kurzeBlase(`Ich bin jetzt ${neueStufe === 1 ? 'ein Kätzchen' : 'eine junge Katze'}! 🎉`, false, 4500);
           setTimeout(() => { letzteZeichnung = ''; zeichne(); }, 4600); // Konfetti wieder weg
         } else kurzeBlase(`${zielSatz}Mmh, Milch! +${dl(portion)} 😋`, false, 3200);
@@ -1434,6 +1441,7 @@ function herzBei(clientX, clientY) {
 
 function antippen() {
   starteAnimation('federn');
+  if (daten.katze.status !== 'weg') miau({ hoch: aktuellerZustand() === 'hungrig' ? 1.15 : 1, lang: aktuellerZustand() === 'hungrig' ? 1.4 : 1 });
   const zustand = aktuellerZustand();
   const liste = ANTIPP_SAETZE[zustand] || ANTIPP_SAETZE.gluecklich;
   kurzeBlase(zufallsEintrag(liste), zustand === 'hungrig');
@@ -1442,6 +1450,7 @@ function antippen() {
 function beginneStreicheln() {
   if (daten.katze.status === 'weg') return;
   streichelt = true;
+  schnurrenStart();
   clearTimeout(beginneStreicheln.ende);
   zeichne();
   el.huelle.classList.add('schnurren');
@@ -1450,6 +1459,7 @@ function beginneStreicheln() {
 
 function beendeStreicheln() {
   el.huelle.classList.remove('schnurren');
+  schnurrenStopp();
   clearTimeout(beginneStreicheln.ende);
   beginneStreicheln.ende = setTimeout(() => { streichelt = false; zeichne(); }, 900);
 }
@@ -2110,11 +2120,28 @@ async function abgleichen() {
   } catch { /* Freundin noch nicht auf dem Server */ }
 }
 
+// ---------- Ton an / aus ----------
+
+function zeigeTonKnopf() {
+  tonAn(daten.ton);
+  const k = $('#ton-knopf');
+  k.textContent = daten.ton ? '🔊' : '🔇';
+  k.setAttribute('aria-label', daten.ton ? 'Ton ausschalten' : 'Ton einschalten');
+  k.setAttribute('aria-pressed', String(daten.ton));
+}
+$('#ton-knopf').addEventListener('click', () => {
+  daten.ton = !daten.ton;
+  speichern();
+  zeigeTonKnopf();
+  if (daten.ton) miau();
+});
+
 // ---------- Start ----------
 
 abrechnen();
 zeichne();
 zeigeDemoKnopf();
+zeigeTonKnopf();
 if (daten.gestartet) freundinAusLink();
 else oeffneWillkommen(); // ein Katzen-Link wird danach übernommen
 window.addEventListener('hashchange', freundinAusLink); // Link kommt, während die App schon offen ist

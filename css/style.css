@@ -247,6 +247,7 @@ button:focus-visible, [tabindex]:focus-visible {
 .rund-knopf:active { transform: scale(.92); }
 .rund-knopf svg { width: 28px; height: 28px; }
 .rund-knopf #freundin-mini { width: 40px; height: 44px; }
+.ton-knopf { font-size: 22px; }
 
 /* ---------- Demo-Leiste ---------- */
 

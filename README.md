@@ -21,6 +21,7 @@ Regeln prüfen: `node tests/regeln.test.mjs`
 - **Münzen:** Jeder Tag mit 2 l gibt bei der Abrechnung um 4 Uhr früh 1 🪙 und Streak +1 (nicht sofort, deshalb sagt die Katze «Morgen früh gibt es 🪙»).
 - **Erster Start:** Kurze Erklärung, eigener Name, erstes Kätzchen aus 3 wählen (Toast-, Tiger- oder Glückskatze, gratis) und benennen.
 - **Gross:** Konfetti, Knopf «In den Katzengarten bringen». Danach kommt ein neues Baby (im Laden gewählte Art, sonst die gleiche).
+- **Töne:** Miau beim Antippen, Schnurren beim Streicheln, Plätschern bei der Milch. Im Browser erzeugt (`js/ton.js`, keine Tondateien). Knopf 🔊/🔇 rechts oben. Auf dem iPhone stumm, wenn der Lautlos-Schalter an ist.
 - **Antippen:** Katze federt und miaut. **Streicheln** (mit dem Finger darüber fahren): Augen zu, schnurren, Herzen.
 - **Katzengarten:** schwebende Insel in Isometrie. **Ab 3 Katzen** wird die Insel grösser (7 × 7 Felder, mehr Kissen und Bäume, breiter als der Bildschirm, mit dem Finger wischen), ab 7 Katzen kommt alle 3 Katzen eine Reihe dazu. Die Katzen schlendern herum, sitzen, schlafen (am liebsten auf den rosa Kissen). Antippen = Miau und Name, streicheln = schnurren, lange drücken und ziehen = Katze woanders hinsetzen.
 - **Laden** (unten links oder gelbes Plus): Katzen mit Münzen freischalten. Jeder Tag mit 2 l gibt 1 🪙.
