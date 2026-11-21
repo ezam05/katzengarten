@@ -44,7 +44,7 @@ Vorlagen: `bilder/vorlagen/katzen/`. Die Figuren sind in `js/katze.js` selbst ge
 | Glückskatze (dreifarbig, Glöckchen) | 14 | glueckskatze.png |
 | Wolkenkatze (Langhaar, blaue Augen) | 21 | wolkenkatze.png |
 | Kleiner Tiger (orange, «王» auf der Stirn) | 30 | Tiger-Bilder vom 2026-11-21 |
-| Tanzkätzchen (Foto, Hintergrund entfernt); 3× schnell antippen → zweite Katze dreht sich 5 s | 20 | tanzkatze-original.webp, drehkatze-original.gif |
+| Tanzkätzchen (Foto, Hintergrund entfernt); 3× schnell antippen → zweite Katze dreht sich 3 s lang, 3× schneller als das Original | 20 | tanzkatze-original.webp, drehkatze-original.gif |
 
 Jede Katze hat den Stil ihrer Vorlage: Glückskatze dicke schwarze Linie mit Lücken und sehr grossen Augen, Wolkenkatze steht auf 4 Beinen mit Flauschkanten und Wolkenschwanz, Tigerkatze als Bohne mit Tusche-Linie und Aquarell, Toastkatze mit dünner Linie, Brot mit Poren und Lachmund.
 

@@ -1193,7 +1193,7 @@ function gartenAntippen(katze) {
     katze.el.querySelector('svg').innerHTML = zeichneKatze({ art: katze.art, groesse: 1, zweite: true, effekte: false }).svg;
     if (!datei(f2.ton)) miau({ hoch: 0.8, lang: 1.6 });
     gartenBlase(katze, 'Wuiii! 🌀');
-    setTimeout(() => { setzePose(katze, 'sitzen'); plane(katze, 2000); }, f2.ms);
+    setTimeout(() => { setzePose(katze, 'sitzen'); plane(katze, 2000); }, f2.dauer);
     return;
   }
   miau({ hoch: 0.9 + Math.random() * 0.3 });
@@ -1570,12 +1570,12 @@ function zaehleTipps(liste) {
 }
 function zeigeZweiteKatze() {
   const f2 = katzenArt().figur.foto2;
-  zweiteBis = Date.now() + f2.ms;
+  zweiteBis = Date.now() + f2.dauer;
   letzteZeichnung = '';
   zeichne();
   if (!datei(f2.ton)) miau({ hoch: 0.8, lang: 1.6 });
   kurzeBlase('Wuiii! 🌀', false, 2500);
-  setTimeout(() => { letzteZeichnung = ''; zeichne(); }, f2.ms + 50);
+  setTimeout(() => { letzteZeichnung = ''; zeichne(); }, f2.dauer + 50);
 }
 const startTipps = [];
 
