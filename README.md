@@ -16,14 +16,14 @@ Regeln prüfen: `node tests/regeln.test.mjs`
 
 ## So funktioniert es
 
-- **Trinken:** Tropfen-Knopf → 1 dl, 2,5 dl oder 5 dl. Jedes Getränk füllt die **Milchflasche** auf der Wiese.
-- **Füttern:** Flasche antippen → sie giesst Milch in den Napf, das Kätzchen schleckt und wird sichtbar grösser.
-- **Grosswerden:** Ein Baby braucht so viel Milch wie «Tage × 2 Liter» (Toastkatze 7 Tage = 14 l). Pro Tag trinkt es höchstens 2 l, danach ist es satt.
+- **Trinken = Füttern:** Tropfen-Knopf → 1 dl, 2,5 dl oder 5 dl. Das Kätzchen bekommt **automatisch** gleich viel Milch: Die Flasche giesst in den Napf, das Kätzchen schleckt und wird grösser. Die Flasche zeigt, wie viel Milch es heute schon bekommen hat.
+- **Wann wächst die Katze?** Sofort, mit jedem Getränk ein Stück. Gross ist sie nach «Tage × 2 Liter» Wasser (Toastkatze 14 l, also etwa 7 Tage mit 2 l). Das Tagesziel bleibt 2 l, Milch gibt es aber bis **3 l pro Tag**, wer mehr trinkt, ist schneller. Den Balken antippen sagt, wie viel noch fehlt.
 - **Gross:** Konfetti, Knopf «In den Katzengarten bringen». Danach kommt ein neues Baby (im Laden gewählte Art, sonst die gleiche).
 - **Antippen:** Katze federt und miaut. **Streicheln** (mit dem Finger darüber fahren): Augen zu, schnurren, Herzen.
-- **Katzengarten:** schwebende Insel in Isometrie. Die Katzen schlendern herum, sitzen, schlafen (am liebsten auf den rosa Kissen). Antippen = Miau und Name, streicheln = schnurren, lange drücken und ziehen = Katze woanders hinsetzen.
+- **Katzengarten:** schwebende Insel in Isometrie. **Ab 3 Katzen** wird die Insel grösser (7 × 7 Felder, mehr Kissen und Bäume, breiter als der Bildschirm, mit dem Finger wischen), ab 7 Katzen kommt alle 3 Katzen eine Reihe dazu. Die Katzen schlendern herum, sitzen, schlafen (am liebsten auf den rosa Kissen). Antippen = Miau und Name, streicheln = schnurren, lange drücken und ziehen = Katze woanders hinsetzen.
 - **Laden** (unten links oder gelbes Plus): Katzen mit Münzen freischalten. Jeder Tag mit 2 l gibt 1 🪙.
 - **Freundin** (runder Knopf oben rechts): ihre Katze, ihr Wasserstand, Anstupsen, ihr Katzengarten.
+- **Kollegin einladen:** In der Freundin-Karte «📨 Kollegin einladen» schickt den Link zur App. Wer ihn öffnet, bekommt **eine eigene Katze und einen eigenen Garten** (gespeichert auf dem eigenen Handy). Mit «🐾 Meine Katze schicken» schickt man sich gegenseitig die eigene Katze samt Garten als Link. Öffnet die andere den Link, fragt die App «… als Freundin speichern?», danach sieht sie die Katze unter dem runden Knopf oben rechts und «… Katzengarten ansehen». Es ist ein Stand zum Zeitpunkt des Schickens. «Anstupsen» schickt eine Nachricht «Trink was! 💧».
 - **Abhauen:** Die Katze stirbt nie, aber sie haut ab, wenn du an einem Tag unter 1 l trinkst oder zwei Tage hintereinander unter 1,5 l. Vorher warnt sie («Trink heute mehr, sonst hau ich ab! 🧳»). Dann bleiben nur Pfotenspuren und ein Zettel, Knopf «Neues Kätzchen holen».
 - **Apple Watch** (Uhr-Knopf unter der Freundin): schickt einen Link auf `uhr.html` mit deiner Katze und wie viel du heute noch trinken musst. Auf der Uhr den Link in Nachrichten antippen. Der Link zeigt den Stand vom Moment des Schickens; auf demselben Gerät zeigt `uhr.html` immer den aktuellen Stand.
 
@@ -55,6 +55,10 @@ Knopf «🧪 Demo» oben: Uhrzeit, Zustand erzwingen, Milch-Schieber, Tag abrech
 - ~~**2026-11-21**: Die Katze **stirbt nie**. Zu wenig trinken macht sie traurig oder hungrig, kostet die Streak, aber keine Milch.~~ (ersetzt am 2026-11-21: Wunsch Elyna «sie stirbt nicht, aber die Katze haut ab»)
 - **2026-11-21**: Die Katze **haut ab** unter 1 l an einem Tag oder bei zwei Tagen hintereinander unter 1,5 l (gleiche Grenzen wie früher das Sterben der Pflanze). Ein grosses Kätzchen, das auf den Garten wartet, haut nicht ab. Danach: neues Baby, Milch und Streak bei 0.
 - **2026-11-21**: Apple Watch (Wunsch: Katze und wie viel noch zu trinken): Eigene Seite `uhr.html` für den kleinen Bildschirm, mit Ring für die Wassermenge. Die Uhr kann keine Web-App installieren, öffnet aber Links aus Nachrichten. Live-Daten auf der Uhr gehen erst mit Konten und Datenbank.
+- **2026-11-21 (Abend)**: ~~Füttern durch Antippen der Flasche, höchstens 2 l pro Tag~~ → Wunsch Elyna: Füttern geschieht **automatisch beim Trinken**, 2 l sind **nicht mehr die Grenze** (jetzt 3 l Milch pro Tag; offene Frage, ob gar keine Grenze).
+- **2026-11-21 (Abend)**: Garten ab 3 Katzen grösser (Wunsch). Die Felder bleiben gleich gross, die Insel wird breiter und lässt sich wischen.
+- **2026-11-21 (Abend)**: Kollegin: ohne Server über Links (einladen, eigene Katze schicken). Der Link wird beim Öffnen genau geprüft (nur bekannte Katzenarten, Zahlen begrenzt, keine HTML-Zeichen in Namen).
+- **2026-11-21 (Abend)**: Eigener Usertest, siehe `USERTEST.md`. Gleich behoben: Katze nach dem Trinken 45 Minuten zufrieden, «Rückgängig» unter dem Balken, Flasche «heute … l», Einladen oben, Streichel-Hinweis.
 - **2026-11-21**: Neue Art «Kleiner Tiger» (30 Tage) nach Elynas Vorgaben. Die 4 Katzen haben je den Stil ihrer Vorlage.
 - **2026-11-21**: Veröffentlicht über GitHub Pages (öffentlich, Elynas Wunsch). Die Bildvorlagen bleiben lokal (`.gitignore`), weil es fremde Illustrationen sind.
 - **2026-11-21**: Abrechnung um 4 Uhr zählt nur noch Streak und Münzen (≥ 2 l: Streak +1, 🪙 +1; 1,25–2 l: Streak bleibt; darunter: Streak 0).
@@ -72,6 +76,8 @@ Knopf «🧪 Demo» oben: Uhrzeit, Zustand erzwingen, Milch-Schieber, Tag abrech
 - [x] App-Symbol, Startbildschirm (manifest)
 - [x] Uhr-Ansicht für die Apple Watch (Link-Stand), auf der echten Uhr getestet am 2026-11-21
 - [x] GitHub und Webseite zum Testen (GitHub Pages)
-- [ ] Erster Start (Name), ohne Internet (Service Worker)
+- [x] Automatisch füttern, bis 3 l Milch, Garten ab 3 Katzen grösser, Kollegin einladen (Links)
+- [x] Eigener Usertest (`USERTEST.md`)
+- [ ] Erster Start (Name, Kätzchen wählen), ohne Internet (Service Worker)
 - [ ] Vercel, Konten und Datenbank, damit Uhr und Freundin live sind (Ablauf: bilder/vorlagen/ablauf-webseite.png)
 - [ ] Scriptable-Widget
