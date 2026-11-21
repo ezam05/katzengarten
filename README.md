@@ -9,7 +9,8 @@ Projekt für das Modul Vibe Coding, HF Interaction Design. Ersetzt die Trink-Pfl
 2. `python3 -m http.server 8000` starten.
 3. Im Browser http://localhost:8000 öffnen (Handy-Ansicht, z. B. 390 × 844).
 
-Online zum Testen: https://ezam05.github.io/katzengarten/ (Uhr-Ansicht: …/uhr.html)
+Online mit Server (empfohlen): Vercel-Projekt «katzengarten» (Team lamo), Datenbank Upstash Redis (Free, Frankfurt), Zugangsdaten als KV_REST_API_URL / KV_REST_API_TOKEN. Jeder Push auf GitHub veröffentlicht neu.
+Ohne Server: https://ezam05.github.io/katzengarten/ (Uhr-Ansicht: …/uhr.html)
 
 Figurenblatt aller Katzen: http://localhost:8000/test-katzen.html
 Regeln prüfen: `node tests/regeln.test.mjs`
