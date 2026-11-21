@@ -1,0 +1,315 @@
+<!doctype html>
+<html lang="de-CH">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#2F7FE0">
+  <title>Katzengarten</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="bilder/icons/icon-192.png">
+  <link rel="apple-touch-icon" href="bilder/icons/icon-180.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Katzengarten">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div class="app">
+
+  <!-- ================= SZENE ================= -->
+  <div class="szene">
+    <svg viewBox="0 0 390 800" preserveAspectRatio="xMidYMax slice" role="img" aria-label="Dein Kätzchen auf der Wiese">
+      <defs>
+        <linearGradient id="g-holz" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#F3D2A0"/><stop offset="1" stop-color="#E2B47C"/>
+        </linearGradient>
+        <linearGradient id="g-napf" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stop-color="#F48BA4"/><stop offset=".45" stop-color="#FFB3C4"/><stop offset="1" stop-color="#E9718E"/>
+        </linearGradient>
+        <linearGradient id="g-glas" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0" stop-color="#FFFFFF" stop-opacity=".55"/><stop offset=".5" stop-color="#FFFFFF" stop-opacity=".85"/><stop offset="1" stop-color="#DCEFF9" stop-opacity=".7"/>
+        </linearGradient>
+        <clipPath id="c-flasche"><rect x="-15" y="-62" width="30" height="58" rx="11"/></clipPath>
+        <path id="stern4" d="M0 -6 Q1.1 -1.1 6 0 Q1.1 1.1 0 6 Q-1.1 1.1 -6 0 Q-1.1 -1.1 0 -6Z"/>
+      </defs>
+
+      <!-- 1 Hintergrund: Wiese mit Bäumen und Wolken (bilder/hintergrund.webp) -->
+      <image href="bilder/hintergrund.webp" x="0" y="0" width="390" height="800" preserveAspectRatio="xMidYMax slice"/>
+
+      <!-- 2 Funkeln und schwebende Blütenblätter -->
+      <g fill="#fff">
+        <g transform="translate(150 96)"><use href="#stern4" class="funkeln" style="animation-delay:-.4s"/></g>
+        <g transform="translate(300 230) scale(.7)"><use href="#stern4" class="funkeln" style="animation-delay:-2s"/></g>
+        <g transform="translate(110 320) scale(.55)"><use href="#stern4" class="funkeln" style="animation-delay:-1.7s"/></g>
+        <g opacity=".8">
+          <ellipse class="schweben" cx="212" cy="380" rx="2.4" ry="1.4" style="animation-delay:-2s"/>
+          <ellipse class="schweben" cx="40" cy="520" rx="2" ry="1.2"/>
+          <ellipse class="schweben" cx="355" cy="470" rx="2.2" ry="1.3" style="animation-delay:-1s"/>
+          <ellipse class="schweben" cx="280" cy="560" rx="1.8" ry="1.1" style="animation-delay:-3s"/>
+          <ellipse class="schweben" cx="130" cy="600" rx="2" ry="1.2" style="animation-delay:-1.5s"/>
+        </g>
+      </g>
+
+      <!-- Holzschild mit Wasserstand -->
+      <g>
+        <rect x="52" y="652" width="8" height="48" rx="3" fill="#C99460"/>
+        <rect x="52" y="652" width="3" height="48" fill="#DDB07C"/>
+        <ellipse cx="56" cy="700" rx="10" ry="3" fill="#1E4A10" opacity=".25"/>
+        <g transform="translate(58 646) rotate(-8)">
+          <rect x="-44" y="-19" width="88" height="38" rx="7" fill="#C89660"/>
+          <rect x="-42" y="-19" width="84" height="34" rx="6" fill="url(#g-holz)"/>
+          <path d="M-34 -9 H-14 M10 7 H32" stroke="#D9A86E" stroke-width="1.6" stroke-linecap="round"/>
+          <circle cx="-36" cy="-2" r="1.8" fill="#B07E4C"/><circle cx="36" cy="-2" r="1.8" fill="#B07E4C"/>
+          <text id="schild-text" class="t-schild" x="0" y="5" text-anchor="middle">💧 0 l</text>
+        </g>
+      </g>
+
+      <!-- Milchnapf -->
+      <g transform="translate(272 698)">
+        <ellipse cx="0" cy="2" rx="30" ry="6" fill="#1E4A10" opacity=".22"/>
+        <ellipse cx="0" cy="-16" rx="25" ry="6.5" fill="#C95A78"/>
+        <ellipse id="napf-milch" class="napf-milch" cx="0" cy="-15" rx="21" ry="5" fill="#FFFDF6"/>
+        <path d="M-26 -16 Q -24 0 -14 1 H14 Q 24 0 26 -16 Q 0 -6 -26 -16Z" fill="url(#g-napf)" stroke="#B9506E" stroke-width="1.5"/>
+        <g fill="#fff" opacity=".85" transform="translate(0 -7) scale(.55)">
+          <ellipse cx="0" cy="3" rx="5" ry="4"/><circle cx="-6" cy="-3" r="2.2"/><circle cx="-2" cy="-6" r="2.2"/><circle cx="2" cy="-6" r="2.2"/><circle cx="6" cy="-3" r="2.2"/>
+        </g>
+      </g>
+
+      <!-- Katze (Boden-Mitte bei 178 / 694) -->
+      <g transform="translate(178 694)">
+        <g transform="scale(1.25)">
+          <g id="katze-huelle" class="katze-huelle" role="button" tabindex="0" aria-label="Kätzchen antippen oder streicheln"></g>
+        </g>
+      </g>
+
+      <!-- Milchflasche (Tippen = füttern) -->
+      <g transform="translate(336 698)">
+        <ellipse cx="0" cy="1" rx="19" ry="4.5" fill="#1E4A10" opacity=".22"/>
+        <g id="flasche" class="flasche" role="button" tabindex="0" aria-label="Milchflasche">
+          <rect x="-24" y="-96" width="48" height="104" fill="transparent"/>
+          <path d="M-6 -86 C -6 -94 6 -94 6 -86 L 7 -76 H -7Z" fill="#F5D7A8" stroke="#D8B27A" stroke-width="1.4"/>
+          <rect x="-13" y="-78" width="26" height="12" rx="4" fill="#7FC6F2" stroke="#4FA9E3" stroke-width="1.4"/>
+          <rect x="-15" y="-66" width="30" height="62" rx="11" fill="url(#g-glas)" stroke="#9CCFEA" stroke-width="2"/>
+          <g clip-path="url(#c-flasche)">
+            <rect id="flasche-milch" x="-15" y="-4" width="30" height="0" fill="#FFFDF6"/>
+          </g>
+          <path d="M-10 -56 V-14" stroke="#fff" stroke-width="3.5" stroke-linecap="round" opacity=".7"/>
+          <path d="M6 -50 H12 M6 -38 H12 M6 -26 H12" stroke="#7FB8D8" stroke-width="1.4" stroke-linecap="round"/>
+          <text id="flasche-text" class="t-flasche" x="0" y="22" text-anchor="middle">0 dl</text>
+        </g>
+      </g>
+
+      <!-- Milchstrahl beim Füttern -->
+      <path id="milchstrahl" class="milchstrahl" d="M271 606 C 272 630 272 656 272 682" stroke="#FFFDF6" stroke-width="5" fill="none" stroke-linecap="round"/>
+
+      <!-- Grasbüschel vorne -->
+      <g>
+        <path fill="#4E9F2E" d="M-10 800 C -4 772, 6 748, 20 732 C 15 756, 17 776, 26 800Z"/>
+        <path fill="#7CC444" d="M8 800 C 14 776, 30 756, 50 748 C 40 768, 37 786, 42 800Z"/>
+        <path fill="#4E9F2E" d="M400 800 C 394 772, 384 748, 370 732 C 375 756, 373 776, 364 800Z"/>
+        <path fill="#7CC444" d="M382 800 C 376 776, 360 756, 340 748 C 350 768, 353 786, 348 800Z"/>
+      </g>
+
+      <!-- Fortschrittsbalken (Milch bis zum Grosswerden), Name der Katze links -->
+      <g id="balken">
+        <rect x="155" y="714" width="134" height="18" rx="9" fill="#3F8F2B"/>
+        <rect id="balken-fuellung" x="155" y="714" width="0" height="18" rx="9" fill="#F5A23A"/>
+        <rect x="160" y="716" width="124" height="4" rx="2" fill="#fff" opacity=".22"/>
+        <text id="balken-text" class="t-balken" x="222" y="728" text-anchor="middle">0/14 l</text>
+        <g id="name-knopf" class="name-knopf" transform="translate(86 709)" role="button" tabindex="0" aria-label="Namen ändern">
+          <path d="M8 0 H77 Q85 0 83 8 L79 22 Q77 28 69 28 H4 Q-4 28 -2 20 L2 6 Q4 0 8 0Z" fill="#E08A4A"/>
+          <path d="M9 2 H75 Q81 2 79 8 L78 12 H4 L5 8 Q6 2 9 2Z" fill="#fff" opacity=".2"/>
+          <text id="katzen-name" class="t-balken-tag" x="41" y="19" text-anchor="middle">Mimi</text>
+        </g>
+      </g>
+
+      <!-- Herzen beim Streicheln -->
+      <g id="herzen"></g>
+
+      <!-- Sprechblase der Katze -->
+      <g id="sprechblase" class="sprechblase"></g>
+
+      <!-- Tropfen-Blase nach dem Trinken («+2,5 dl») -->
+      <g id="trink-blase"></g>
+    </svg>
+  </div>
+
+  <!-- ================= OBERE LEISTE ================= -->
+  <header class="oben">
+    <div class="status-pille">
+      <span class="status-wert" aria-label="Streak"><span aria-hidden="true">🔥</span> <span id="streak-zahl">0</span></span>
+      <span class="status-wert" aria-label="Münzen"><span aria-hidden="true">🪙</span> <span id="muenzen-zahl">0</span></span>
+      <button class="plus-knopf" id="plus-knopf" type="button" aria-label="Katzen-Laden öffnen"><span aria-hidden="true">+</span></button>
+    </div>
+  </header>
+
+  <div class="rund-knoepfe">
+    <button class="rund-knopf" id="freundin-knopf" type="button" aria-label="Katze deiner Freundin ansehen">
+      <svg id="freundin-mini" viewBox="-58 -120 116 124" aria-hidden="true"></svg>
+    </button>
+    <button class="rund-knopf uhr-knopf" id="uhr-knopf" type="button" aria-label="Katze auf die Apple Watch schicken">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="2" width="10" height="4" rx="1.5" fill="currentColor"/><rect x="7" y="18" width="10" height="4" rx="1.5" fill="currentColor"/><rect x="4.5" y="5" width="15" height="14" rx="4.5" fill="currentColor"/><path d="M12 9 V12.5 L14.5 14" stroke="#fff" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg>
+    </button>
+  </div>
+
+  <!-- ================= DEMO-LEISTE ================= -->
+  <button class="demo-knopf" type="button" aria-expanded="false" aria-controls="demo-panel">🧪 Demo</button>
+  <section id="demo-panel" class="demo-panel" hidden aria-label="Demo-Einstellungen">
+    <h2><label for="demo-uhr">Uhrzeit: <output id="demo-uhr-text">echt</output></label></h2>
+    <input id="demo-uhr" type="range" min="8" max="22" step="0.5" value="12">
+    <div class="demo-chips">
+      <button type="button" id="demo-uhr-echt">🕒 Echte Zeit</button>
+    </div>
+    <h2>Zustand</h2>
+    <div class="demo-chips" id="demo-zustand">
+      <button type="button" data-zustand="auto">🤖 Automatisch</button>
+      <button type="button" data-zustand="gluecklich">😺 Glücklich</button>
+      <button type="button" data-zustand="traurig">😿 Traurig</button>
+      <button type="button" data-zustand="hungrig">🥺 Hungrig</button>
+      <button type="button" data-zustand="fertig">🎉 Gross</button>
+      <button type="button" data-zustand="weg">🧳 Abgehauen</button>
+    </div>
+    <h2><label for="demo-milch">Milch getrunken: <output id="demo-milch-text">0</output></label></h2>
+    <input id="demo-milch" type="range" min="0" max="14000" step="250" value="0">
+    <p class="demo-stufe" id="demo-stufe">Stufe: Neugeboren</p>
+    <h2>Abrechnung</h2>
+    <div class="demo-chips">
+      <button type="button" id="demo-abrechnen">🌙 Tag abrechnen (4 Uhr)</button>
+      <button type="button" id="demo-ueberspringen">⏭️ 3 Tage nicht in der App</button>
+      <button type="button" id="demo-muenzen">🪙 Münzen +10</button>
+      <button type="button" id="demo-garten">🐾 3 Beispiel-Katzen in den Garten</button>
+    </div>
+    <h2>Freundin (Beispiel)</h2>
+    <div class="demo-chips">
+      <button type="button" id="demo-fr-trinkt">💧 Sie trinkt 2,5 dl</button>
+      <button type="button" id="demo-fr-stupst">👉 Sie stupst mich an</button>
+      <button type="button" id="demo-fr-fertig">🏡 Ihre Katze ist gross</button>
+    </div>
+    <p class="demo-stufe" id="demo-info"></p>
+    <div class="demo-chips demo-unten">
+      <button type="button" id="demo-reset">🗑️ Alles zurücksetzen</button>
+    </div>
+  </section>
+
+  <!-- Rückgängig (5 Sekunden nach dem Eintragen) -->
+  <button class="rueckgaengig" id="rueckgaengig" type="button" hidden>↶ Rückgängig</button>
+
+  <!-- Knopf, wenn die Katze gross ist -->
+  <button class="aktion-knopf" id="aktion-knopf" type="button" hidden></button>
+
+  <!-- ================= UNTERE LEISTE ================= -->
+  <nav class="unten" aria-label="Hauptmenü">
+    <button class="leiste-knopf" id="leiste-laden" type="button" aria-label="Katzen-Laden"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-laden"/></svg></button>
+    <div class="tropfen-platz" id="tropfen-platz">
+      <button class="faecher-knopf" type="button" data-ml="100" style="--x:-84px;--y:-50px" aria-label="1 Deziliter eintragen" tabindex="-1"><span aria-hidden="true">💧</span>1 dl</button>
+      <button class="faecher-knopf" type="button" data-ml="250" style="--x:0px;--y:-100px" aria-label="2,5 Deziliter eintragen" tabindex="-1"><span aria-hidden="true">🥛</span>2,5 dl</button>
+      <button class="faecher-knopf" type="button" data-ml="500" style="--x:84px;--y:-50px" aria-label="5 Deziliter eintragen" tabindex="-1"><span aria-hidden="true">🍶</span>5 dl</button>
+      <button class="tropfen-knopf" id="tropfen-knopf" type="button" aria-label="Getränk eintragen" aria-expanded="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5 C 15 8, 18 11, 18 14.5 A 6 6 0 0 1 6 14.5 C 6 11, 9 8, 12 3.5Z" fill="#fff"/><ellipse cx="9.6" cy="14.5" rx="1.3" ry="2.2" fill="#9ED6F7"/></svg>
+        <span class="tropfen-zahl" id="tropfen-zahl" aria-hidden="true">8</span>
+      </button>
+    </div>
+    <button class="leiste-knopf" id="leiste-garten" type="button" aria-label="Katzengarten"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#icon-garten"/></svg></button>
+  </nav>
+
+  <!-- ================= KATZENGARTEN ================= -->
+  <section class="garten-seite" id="garten" hidden aria-labelledby="garten-titel">
+    <header class="garten-kopf">
+      <button class="rund-knopf" type="button" id="garten-zurueck" aria-label="Zurück zum Kätzchen">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 5 L8 12 L15 19" stroke="currentColor" stroke-width="2.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <h2 class="holz-pille garten-titel" id="garten-titel">
+        <svg class="holz-blatt" viewBox="0 0 44 36" aria-hidden="true">
+          <g fill="#FFF4E8" stroke="#B4622E" stroke-width="1.5">
+            <ellipse cx="22" cy="24" rx="9" ry="7.5"/><circle cx="11" cy="15" r="4.2"/><circle cx="18" cy="9" r="4.2"/><circle cx="26" cy="9" r="4.2"/><circle cx="33" cy="15" r="4.2"/>
+          </g>
+        </svg>
+        <span id="garten-titel-text">Katzengarten</span>
+      </h2>
+    </header>
+    <p class="garten-leer" id="garten-leer" hidden>Noch leer. Wenn dein Kätzchen gross ist, zieht es hier ein 🐾</p>
+    <div class="insel-huelle">
+      <div class="insel" id="insel">
+        <svg class="insel-boden" id="insel-boden" aria-hidden="true"></svg>
+        <div class="insel-dinge" id="garten-raster"></div>
+      </div>
+    </div>
+    <p class="garten-tipp" id="garten-tipp"></p>
+  </section>
+
+  <!-- ================= FREUNDIN ================= -->
+  <div class="unterblatt-huelle" id="freundin" hidden>
+    <div class="unterblatt-hintergrund" data-schliessen></div>
+    <section class="unterblatt freundin-blatt" role="dialog" aria-modal="true" aria-labelledby="freundin-titel">
+      <div class="griff" aria-hidden="true"></div>
+      <header class="unterblatt-kopf">
+        <span class="freundin-bild" id="freundin-bild" aria-hidden="true"></span>
+        <div class="freundin-kopf-text">
+          <h2 id="freundin-titel">Lea</h2>
+          <p>Deine Freundin</p>
+        </div>
+        <button class="schliessen-knopf" type="button" data-schliessen aria-label="Karte schliessen">✕</button>
+      </header>
+      <div class="freundin-buehne">
+        <svg id="freundin-katze" viewBox="-120 -200 240 228" role="img" aria-label="Katze deiner Freundin"></svg>
+      </div>
+      <div class="freundin-werte">
+        <div class="wert wert-breit">
+          <span class="wert-zahl"><span aria-hidden="true">💧</span> <span id="fr-ml">0 von 2 l</span></span>
+          <span class="wert-balken" aria-hidden="true"><span id="fr-ml-balken"></span></span>
+        </div>
+        <div class="wert">
+          <span class="wert-zahl"><span aria-hidden="true">🔥</span> <span id="fr-streak">0</span></span>
+          <span class="wert-text">Streak</span>
+        </div>
+      </div>
+      <p class="freundin-zustand" id="fr-zustand"></p>
+      <button class="anstupsen-knopf" id="anstupsen" type="button">Anstupsen 💧</button>
+      <button class="zweit-knopf" id="fr-garten-knopf" type="button">🐾 Katzengarten ansehen</button>
+      <p class="freundin-hinweis" id="fr-hinweis"></p>
+    </section>
+  </div>
+
+  <!-- Meldung oben (z. B. «Lea hat dich angestupst 💧») -->
+  <div class="meldung" id="meldung" role="status" aria-live="polite" hidden></div>
+
+  <!-- ================= LADEN ================= -->
+  <div class="unterblatt-huelle" id="laden" hidden>
+    <div class="unterblatt-hintergrund" data-schliessen></div>
+    <section class="unterblatt" role="dialog" aria-modal="true" aria-labelledby="laden-titel">
+      <div class="griff" aria-hidden="true"></div>
+      <header class="unterblatt-kopf">
+        <h2 id="laden-titel">🐾 Katzen</h2>
+        <span class="muenz-pille" id="laden-muenzen">🪙 0</span>
+        <button class="schliessen-knopf" type="button" data-schliessen aria-label="Laden schliessen">✕</button>
+      </header>
+      <p class="laden-hinweis">Jeder Tag mit 2 Litern gibt 1 🪙. Freigeschaltete Katzen kommen als Baby zu dir und werden mit Milch gross.</p>
+      <div class="laden-raster" id="laden-raster"></div>
+    </section>
+  </div>
+
+  <p class="sr-only" id="ansage" aria-live="polite"></p>
+</div>
+
+<!-- Symbole (einmal definiert, mehrfach verwendet) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="icon-laden" viewBox="0 0 24 24">
+    <path d="M4 9 H20 V20 Q20 21 19 21 H5 Q4 21 4 20Z" fill="currentColor"/>
+    <path d="M3 5 Q3 3 5 3 H19 Q21 3 21 5 L22 9 Q22 11 19.5 11 Q17 11 17 9 Q17 11 14.5 11 Q12 11 12 9 Q12 11 9.5 11 Q7 11 7 9 Q7 11 4.5 11 Q2 11 2 9Z" fill="currentColor"/>
+    <rect x="9.5" y="14" width="5" height="7" rx="1" fill="#F6F1E6"/>
+  </symbol>
+  <symbol id="icon-garten" viewBox="0 0 24 24">
+    <ellipse cx="12" cy="16.5" rx="5.2" ry="4.4" fill="currentColor"/>
+    <ellipse cx="5.4" cy="10.6" rx="2.3" ry="2.8" fill="currentColor"/>
+    <ellipse cx="9.4" cy="6.4" rx="2.3" ry="2.9" fill="currentColor"/>
+    <ellipse cx="14.6" cy="6.4" rx="2.3" ry="2.9" fill="currentColor"/>
+    <ellipse cx="18.6" cy="10.6" rx="2.3" ry="2.8" fill="currentColor"/>
+  </symbol>
+</svg>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="de-CH">
+<head>
+<meta charset="utf-8">
+<title>Katzen – Figurenblatt</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<style>
+  body { display:block; background:#EAF4E2; padding:12px; height:auto; overflow:auto; }
+  .reihe { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px; }
+  figure { margin:0; background:linear-gradient(#BFE6F5 70%, #A9D97A 70%); border-radius:14px; text-align:center; font:13px sans-serif; }
+  svg { width:150px; height:170px; display:block; }
+</style>
+</head>
+<body>
+<!-- Figurenblatt zum Prüfen der Katzen-Zeichnungen (nicht Teil der App) -->
+<div id="blatt"></div>
+<script type="module">
+  import { ARTEN } from './js/arten.js';
+  import { zeichneKatze } from './js/katze.js';
+  const faelle = [
+    ['Baby', { groesse: 0 }], ['halb', { groesse: 0.5 }], ['gross', { groesse: 1 }],
+    ['traurig', { zustand: 'traurig' }], ['hungrig', { zustand: 'hungrig' }],
+    ['gestreichelt', { zustand: 'gestreichelt' }], ['laufen', { pose: 'laufen' }], ['Baby läuft', { pose: 'laufen', groesse: 0 }], ['schlafen', { pose: 'schlafen' }], ['Baby schläft', { pose: 'schlafen', groesse: 0 }],
+  ];
+  let html = '';
+  for (const art of ARTEN) {
+    html += `<h3>${art.name}</h3><div class="reihe">`;
+    for (const [titel, o] of faelle) {
+      const { svg, hoehe } = zeichneKatze({ art, ...o });
+      html += `<figure><svg viewBox="-80 -175 160 185">${svg}<line x1="-80" x2="80" y1="${-hoehe}" y2="${-hoehe}" stroke="red" stroke-width=".5"/></svg>${titel}</figure>`;
+    }
+    html += '</div>';
+  }
+  document.getElementById('blatt').innerHTML = html;
+</script>
+</body>
+</html>

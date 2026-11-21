@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="de-CH">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Apple Watch: Seite nicht verkleinern, sie ist schon für die Uhr gebaut -->
+  <meta name="disabled-adaptations" content="watch">
+  <meta name="theme-color" content="#0B1A12">
+  <title>Katzengarten ⌚</title>
+  <link rel="icon" href="bilder/icons/icon-180.png">
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    html, body { height: auto; background: #0B1A12; color: #fff; }
+    body { display: block !important; margin: 0; }
+    .uhr { max-width: 240px; margin: 0 auto; padding: 4px 6px 12px; text-align: center; font-family: var(--schrift-titel); }
+    .ring { width: 100%; aspect-ratio: 1; }
+    .ring svg { width: 100%; height: 100%; display: block; }
+    .noch { margin: 2px 0 0; font-size: 22px; font-weight: 700; line-height: 1.15; }
+    .klein { margin: 3px 0 0; font-size: 13px; font-weight: 500; color: #B9D9C0; }
+    .stand { margin: 6px 0 0; font-size: 11px; color: #7F9C88; }
+    .uhr .katze-huelle.federn { animation: federn .6s cubic-bezier(.3, 1.4, .5, 1); }
+  </style>
+</head>
+<body>
+<main class="uhr">
+  <div class="ring"><svg id="ring" viewBox="-100 -100 200 200" role="img" aria-label="Deine Katze"></svg></div>
+  <p class="noch" id="noch">…</p>
+  <p class="klein" id="klein"></p>
+  <p class="stand" id="stand"></p>
+</main>
+<script type="module">
+  // Uhr-Ansicht: zeigt die Katze und wie viel du heute noch trinken musst.
+  // Daten: aus dem Link (#n=…, von der App «Auf die Uhr») oder, auf demselben Gerät, direkt aus der App.
+  import { artNachId, milchBisGross } from './js/arten.js';
+  import { zeichneKatze } from './js/katze.js';
+  import { ZIEL_ML, tagesSchluessel, eintraegeVomTag, summeMl, katzenZustand } from './js/regeln.js';
+
+  const zahl = (z) => String(Math.round(z * 100) / 100).replace('.', ',');
+  const liter = (ml) => `${zahl(ml / 1000)} l`;
+
+  function ausLink() {
+    const p = new URLSearchParams(location.hash.slice(1));
+    if (!p.has('a')) return null;
+    const t = Number(p.get('t')) || Date.now();
+    const heute = tagesSchluessel(Date.now()) === tagesSchluessel(t);
+    return {
+      name: p.get('n') || 'Kätzchen', artId: p.get('a'), milch: Number(p.get('m')) || 0, status: p.get('s') || 'waechst',
+      heuteMl: heute ? Number(p.get('h')) || 0 : 0, zustand: heute ? p.get('z') || 'gluecklich' : 'traurig', zeit: t,
+    };
+  }
+
+  function ausApp() {
+    try {
+      const d = JSON.parse(localStorage.getItem('katzengarten-v1'));
+      if (!d?.katze) return null;
+      const jetzt = Date.now() + (d.demoVersatz || 0) * 864e5;
+      const heute = eintraegeVomTag(d.eintraege || [], tagesSchluessel(jetzt));
+      const heuteMl = summeMl(heute);
+      const letzte = heute.length ? Math.max(...heute.map((e) => e.zeit)) : null;
+      const zustand = d.katze.status === 'fertig' ? 'fertig' : katzenZustand({ heuteMl, jetzt, letzteTrinkZeit: letzte });
+      return { name: d.katze.name, artId: d.katze.artId, milch: d.katze.milch, status: d.katze.status, heuteMl, zustand, zeit: null };
+    } catch { return null; }
+  }
+
+  const k = ausLink() || ausApp() || { name: 'Mimi', artId: 'toast', milch: 0, status: 'waechst', heuteMl: 0, zustand: 'traurig', zeit: null };
+  const art = artNachId(k.artId);
+  const bisGross = milchBisGross(art);
+  const anteil = Math.min(1, k.heuteMl / ZIEL_ML);
+  const umfang = 2 * Math.PI * 88;
+
+  let mitte;
+  if (k.status === 'weg') {
+    mitte = `<text x="0" y="10" text-anchor="middle" font-size="44">🐾</text>`;
+  } else {
+    const { svg } = zeichneKatze({ art, groesse: Math.min(1, k.milch / bisGross), zustand: k.zustand, effekte: false });
+    mitte = `<g transform="translate(0 52) scale(.6)"><g class="katze-huelle" id="katze">${svg}</g></g>`;
+  }
+  document.getElementById('ring').innerHTML = `
+    <defs><clipPath id="kreis"><circle r="78"/></clipPath>
+      <linearGradient id="wiese" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5FB4F0"/><stop offset=".62" stop-color="#BFE6F5"/><stop offset=".62" stop-color="#9BD65A"/><stop offset="1" stop-color="#6DBB45"/></linearGradient></defs>
+    <circle r="88" fill="none" stroke="#1F3A28" stroke-width="13"/>
+    <circle r="88" fill="none" stroke="#49B4F0" stroke-width="13" stroke-linecap="round"
+      stroke-dasharray="${(umfang * anteil).toFixed(1)} ${umfang.toFixed(1)}" transform="rotate(-90)"/>
+    <g clip-path="url(#kreis)"><rect x="-80" y="-80" width="160" height="160" fill="url(#wiese)"/>${mitte}</g>`;
+
+  const rest = Math.max(0, ZIEL_ML - k.heuteMl);
+  document.getElementById('noch').textContent = k.status === 'weg'
+    ? `${k.name} ist abgehauen 😿`
+    : rest > 0 ? `Noch ${liter(rest)} 💧` : 'Geschafft! 🎉';
+  document.getElementById('klein').textContent = k.status === 'weg'
+    ? 'Hol ein neues Kätzchen in der App'
+    : `${k.name} · heute ${liter(k.heuteMl)} · 🍼 ${zahl(k.milch / 1000)}/${bisGross / 1000} l`;
+  if (k.zeit) {
+    const d = new Date(k.zeit);
+    document.getElementById('stand').textContent = `Stand ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+  }
+  document.getElementById('ring').setAttribute('aria-label', `${k.name}, ${art.name}. ${document.getElementById('noch').textContent}`);
+
+  // Antippen: Katze federt
+  const katze = document.getElementById('katze');
+  katze?.addEventListener('click', () => {
+    katze.classList.remove('federn');
+    void katze.getBBox();
+    katze.classList.add('federn');
+  });
+</script>
+</body>
+</html>
