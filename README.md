@@ -70,7 +70,7 @@ Knopf «🧪 Demo» oben: Uhrzeit, Zustand erzwingen, Milch-Schieber, Tag abrech
 - [x] Katzengarten in Isometrie (schlendern, schlafen, tragen)
 - [x] Laden, Freundin (Beispieldaten), Demo-Leiste
 - [x] App-Symbol, Startbildschirm (manifest)
-- [x] Uhr-Ansicht für die Apple Watch (Link-Stand)
+- [x] Uhr-Ansicht für die Apple Watch (Link-Stand), auf der echten Uhr getestet am 2026-11-21
 - [x] GitHub und Webseite zum Testen (GitHub Pages)
 - [ ] Erster Start (Name), ohne Internet (Service Worker)
 - [ ] Vercel, Konten und Datenbank, damit Uhr und Freundin live sind (Ablauf: bilder/vorlagen/ablauf-webseite.png)
