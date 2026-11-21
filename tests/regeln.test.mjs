@@ -2,10 +2,11 @@
 import assert from 'node:assert/strict';
 import { milchPortion, rechneTagAb, hautAb, stufeFuerMilch, tagesSchluessel, zuerichZuMs } from '../js/regeln.js';
 
-// Milch nur für heute getrunkenes Wasser, höchstens 2 l pro Tag, nicht mehr als nötig
+// Milch nur für heute getrunkenes Wasser, höchstens 3 l pro Tag (2 l ist nicht die Grenze), nicht mehr als nötig
 assert.equal(milchPortion({ heuteGetrunken: 500, heuteGefuettert: 0, milch: 0, bisGross: 14000 }), 500);
 assert.equal(milchPortion({ heuteGetrunken: 500, heuteGefuettert: 500, milch: 500, bisGross: 14000 }), 0);
-assert.equal(milchPortion({ heuteGetrunken: 3000, heuteGefuettert: 1500, milch: 0, bisGross: 14000 }), 500);
+assert.equal(milchPortion({ heuteGetrunken: 2500, heuteGefuettert: 2000, milch: 0, bisGross: 14000 }), 500);
+assert.equal(milchPortion({ heuteGetrunken: 4000, heuteGefuettert: 2500, milch: 0, bisGross: 14000 }), 500);
 assert.equal(milchPortion({ heuteGetrunken: 2000, heuteGefuettert: 0, milch: 13800, bisGross: 14000 }), 200);
 
 // Abrechnung: 2 l = Streak + Münze, 1,25–2 l = Streak bleibt, darunter Streak weg

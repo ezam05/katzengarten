@@ -115,10 +115,12 @@
 
       <!-- Fortschrittsbalken (Milch bis zum Grosswerden), Name der Katze links -->
       <g id="balken">
-        <rect x="155" y="714" width="134" height="18" rx="9" fill="#3F8F2B"/>
-        <rect id="balken-fuellung" x="155" y="714" width="0" height="18" rx="9" fill="#F5A23A"/>
-        <rect x="160" y="716" width="124" height="4" rx="2" fill="#fff" opacity=".22"/>
-        <text id="balken-text" class="t-balken" x="222" y="728" text-anchor="middle">0/14 l</text>
+        <g id="balken-knopf" class="balken-knopf" role="button" tabindex="0" aria-label="Wie lange wächst mein Kätzchen noch?">
+          <rect x="155" y="714" width="134" height="18" rx="9" fill="#3F8F2B"/>
+          <rect id="balken-fuellung" x="155" y="714" width="0" height="18" rx="9" fill="#F5A23A"/>
+          <rect x="160" y="716" width="124" height="4" rx="2" fill="#fff" opacity=".22"/>
+          <text id="balken-text" class="t-balken" x="222" y="728" text-anchor="middle">0/14 l</text>
+        </g>
         <g id="name-knopf" class="name-knopf" transform="translate(86 709)" role="button" tabindex="0" aria-label="Namen ändern">
           <path d="M8 0 H77 Q85 0 83 8 L79 22 Q77 28 69 28 H4 Q-4 28 -2 20 L2 6 Q4 0 8 0Z" fill="#E08A4A"/>
           <path d="M9 2 H75 Q81 2 79 8 L78 12 H4 L5 8 Q6 2 9 2Z" fill="#fff" opacity=".2"/>
@@ -270,6 +272,11 @@
       <button class="anstupsen-knopf" id="anstupsen" type="button">Anstupsen 💧</button>
       <button class="zweit-knopf" id="fr-garten-knopf" type="button">🐾 Katzengarten ansehen</button>
       <p class="freundin-hinweis" id="fr-hinweis"></p>
+      <p class="freundin-beispiel" id="fr-beispiel">Lea ist nur ein Beispiel. Lade deine Kollegin ein: Sie bekommt ihre eigene Katze. Schickt euch danach eure Katzen, dann seht ihr sie hier.</p>
+      <div class="teilen-knoepfe">
+        <button class="zweit-knopf" id="einladen-knopf" type="button">📨 Kollegin einladen</button>
+        <button class="zweit-knopf" id="zeigen-knopf" type="button">🐾 Meine Katze schicken</button>
+      </div>
     </section>
   </div>
 

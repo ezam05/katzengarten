@@ -5,7 +5,7 @@ import { zeichneKatze, zufall } from './katze.js';
 import {
   STUFEN, ZIEL_ML, stufeFuerMilch, tagesSchluessel, zeitImTag, stundeImTag,
   eintraegeVomTag, summeMl, glaeserBisZiel, katzenZustand, milchPortion,
-  rechneTagAb, offeneTage, verschiebeTag, SCHWELLE_WEG, SCHWELLE_ZWEITER,
+  rechneTagAb, offeneTage, verschiebeTag, SCHWELLE_WEG, SCHWELLE_ZWEITER, MILCH_MAX_ML,
 } from './regeln.js';
 
 const KATZE_X = 178;    // Boden-Mitte der Katze in der Szene
@@ -37,8 +37,9 @@ function startDaten() {
     angestupstUm: null,    // wann ich die Freundin zuletzt angestupst habe
     // Beispiel-Freundin, bis der Server die echten Daten liefert
     freundin: {
+      beispiel: true,  // wird ersetzt, sobald eine echte Kollegin ihren Link schickt
       name: 'Lea', katzenName: 'Lilo', artId: 'glueck', milch: 16000, status: 'waechst',
-      streak: 5, heuteMl: 1400, letzteTrinkZeit: null,
+      streak: 5, heuteMl: 1400, letzteTrinkZeit: null, stand: null,
       garten: [
         { artId: 'toast', name: 'Brösmeli', datum: '2026-10-12' },
         { artId: 'tiger', name: 'Flocke', datum: '2026-10-22' },
@@ -95,8 +96,7 @@ function jetzt() {
 const heute = () => tagesSchluessel(jetzt());
 const heuteMl = () => summeMl(eintraegeVomTag(daten.eintraege, heute()));
 const heuteGefuettert = () => summeMl(eintraegeVomTag(daten.fuetterungen, heute()));
-const flascheMl = () => Math.max(0, heuteMl() - heuteGefuettert());
-const satt = () => heuteGefuettert() >= ZIEL_ML;
+const satt = () => heuteGefuettert() >= MILCH_MAX_ML;
 const katzenArt = () => artNachId(daten.katze.artId);
 const groesse = (k = daten.katze) => Math.min(1, k.milch / milchBisGross(artNachId(k.artId)));
 
@@ -172,6 +172,9 @@ function uhrText(stunde) {
   return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
 }
 
+// Text von aussen (Eingabe, Link) ohne Zeichen, die HTML verändern könnten
+const sauber = (t, max = 14) => String(t ?? '').replace(/[<>&"'`]/g, '').trim().slice(0, max);
+
 const zufallsEintrag = (liste) => liste[Math.floor(Math.random() * liste.length)];
 
 function neuerName() {
@@ -188,11 +191,10 @@ function normalerSatz(zustand) {
   if (zustand === 'hungrig') return { text: 'Ich hab Hunger auf Milch 🥺', dringend: true };
   const warnung = abhauWarnung();
   if (warnung) return { text: warnung, dringend: true };
-  if (flascheMl() >= 50 && !satt()) return { text: 'Milch in der Flasche! Tipp drauf 🍼', dringend: false };
   switch (zustand) {
     case 'traurig': return { text: n <= 2 ? `Noch ${n} ${n === 1 ? 'Glas' : 'Gläser'}, dann gibt's Milch 🥛` : 'Trinkst du was? Dann krieg ich Milch 🥛', dringend: false };
     default:
-      if (satt()) return { text: 'Ich bin satt und glücklich 😺', dringend: false };
+      if (satt()) return { text: 'Ich bin pappsatt und glücklich 😺', dringend: false };
       if (n === 0) return { text: 'Geschafft! 2 Liter 🎉', dringend: false };
       return { text: `Noch ${n} ${n === 1 ? 'Glas' : 'Gläser'} bis zum Ziel!`, dringend: false };
   }
@@ -288,18 +290,14 @@ function zeigeName(name) {
   el.nameKnopf.setAttribute('aria-label', `${name}. Namen ändern`);
 }
 
+// Die Flasche zeigt, wie viel Milch das Kätzchen heute schon bekommen hat (voll = 3 l)
 function zeigeFlasche() {
-  const ml = flascheMl();
-  // volle Flasche = 5 dl, mehr passt nicht hinein (der Rest wartet)
-  const h = Math.round(58 * Math.min(1, ml / 500));
+  const ml = heuteGefuettert();
+  const h = Math.round(58 * Math.min(1, Math.max(0.15, ml / MILCH_MAX_ML)));
   el.flascheMilch.setAttribute('y', -4 - h);
   el.flascheMilch.setAttribute('height', h);
-  el.flascheText.textContent = satt() ? 'satt 😺' : dl(ml);
-  const bereit = ml >= 50 && !satt() && daten.katze.status === 'waechst';
-  el.flasche.classList.toggle('bereit', bereit);
-  el.flasche.setAttribute('aria-label', satt()
-    ? 'Milchflasche. Dein Kätzchen ist für heute satt.'
-    : `Milchflasche: ${dl(ml)}. ${bereit ? 'Tippen zum Füttern.' : 'Trink Wasser, dann gibt es Milch.'}`);
+  el.flascheText.textContent = satt() ? 'satt 😺' : `🍼 ${liter(ml)}`;
+  el.flasche.setAttribute('aria-label', `Milchflasche: heute ${liter(ml)} Milch bekommen. Milch gibt es automatisch, wenn du trinkst.`);
 }
 
 function zeichne() {
@@ -412,40 +410,32 @@ function abrechnen() {
   el.ansage.textContent = `${anzahl}Letzter Tag: ${liter(letzter.ml)}. ${satz || ''}`;
 }
 
-// ---------- Füttern ----------
+// ---------- Füttern (automatisch beim Trinken) ----------
 
-function fuettern() {
-  if (fuettertGerade) return;
+// Gibt dem Kätzchen die Milch für das heute getrunkene Wasser. Ergebnis: Menge in ml.
+function fuettereAutomatisch() {
   const k = daten.katze;
+  if (k.status !== 'waechst') return 0;
   const art = katzenArt();
-  if (k.status === 'fertig') { kurzeBlase('Ich bin schon gross! 🏡'); return; }
-  if (k.status === 'weg') { kurzeBlase('Niemand da zum Füttern… 😿 Hol ein neues Kätzchen'); wackeln(el.flasche); return; }
-  if (satt()) { kurzeBlase('Ich bin satt für heute 😺'); wackeln(el.flasche); return; }
   const portion = milchPortion({ heuteGetrunken: heuteMl(), heuteGefuettert: heuteGefuettert(), milch: k.milch, bisGross: milchBisGross(art) });
-  if (portion <= 0) {
-    wackeln(el.flasche);
-    kurzeBlase('Die Flasche ist leer. Trink zuerst Wasser 💧', false, 3200);
-    return;
-  }
-
+  if (portion <= 0) return 0;
   daten.fuetterungen.push({ ml: portion, zeit: jetzt() });
   k.milch += portion;
-  const gross = k.milch >= milchBisGross(art);
-  if (gross) k.status = 'fertig';
+  if (k.milch >= milchBisGross(art)) k.status = 'fertig';
   demo.zustand = null;
-  speichern();
+  return portion;
+}
 
-  // Animation: Flasche giesst, Napf füllt sich, Katze schleckt
+// Animation: Flasche giesst, Napf füllt sich, Katze schleckt und wird grösser
+function milchAnimation(portion, danach) {
   fuettertGerade = true;
   clearTimeout(blaseTimer);
   blaseTimer = null;
   el.blase.innerHTML = '';
-  zeigeFlasche();
   el.szene.classList.remove('fuettern');
   void el.szene.getBBox?.();
   el.szene.classList.add('fuettern');
   starteAnimation('schlecken');
-  el.ansage.textContent = `${dl(portion)} Milch gefüttert.`;
   setTimeout(() => {
     fuettertGerade = false;
     el.szene.classList.remove('fuettern');
@@ -454,8 +444,7 @@ function fuettern() {
     starteAnimation('wachsen');
     clearTimeout(blaseTimer);
     blaseTimer = null;
-    if (gross) kurzeBlase('Ich bin gross geworden! 🎉', false, 4000);
-    else kurzeBlase(`Mmh, Milch! +${dl(portion)} 😋`, false, 3000);
+    danach();
   }, 1900);
 }
 
@@ -465,11 +454,30 @@ function wackeln(ziel) {
   ziel.classList.add('wackeln');
 }
 
-el.flasche.addEventListener('click', fuettern);
+// Flasche antippen: erklärt, wie das Füttern geht
+function flascheAntippen() {
+  wackeln(el.flasche);
+  kurzeBlase(satt() ? 'Ich bin pappsatt für heute 😺' : 'Milch kommt von selbst, wenn du trinkst 💧', false, 3200);
+}
+el.flasche.addEventListener('click', flascheAntippen);
 el.flasche.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fuettern(); }
+  if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); flascheAntippen(); }
 });
 el.flasche.addEventListener('animationend', () => el.flasche.classList.remove('wackeln'));
+
+// Balken antippen: sagt, wie lange das Kätzchen noch wächst
+function wachstumErklaeren() {
+  const k = daten.katze;
+  if (k.status === 'fertig') { kurzeBlase('Ich bin gross! Ab in den Garten 🏡'); return; }
+  if (k.status === 'weg') { kurzeBlase('Hol dir ein neues Kätzchen 🍼'); return; }
+  const rest = milchBisGross(katzenArt()) - k.milch;
+  const tage = Math.ceil(rest / ZIEL_ML);
+  kurzeBlase(`Noch ${liter(rest)} Wasser, dann bin ich gross! (ca. ${tage} ${tage === 1 ? 'Tag' : 'Tage'})`, false, 4200);
+}
+$('#balken-knopf').addEventListener('click', wachstumErklaeren);
+$('#balken-knopf').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); wachstumErklaeren(); }
+});
 
 // ---------- Gross: in den Garten ----------
 
@@ -492,6 +500,7 @@ function inDenGartenBringen() {
   speichern();
   zeichne();
   kurzeBlase(`${name} wohnt jetzt im Garten! Ich bin ${daten.katze.name} 🍼`, false, 4500);
+  if (daten.garten.length === GARTEN_GROSS_AB) zeigeMeldung('🌳 3 Katzen! Dein Katzengarten ist grösser geworden.', false);
 }
 
 function neuesKaetzchenHolen() {
@@ -513,7 +522,7 @@ el.aktion.addEventListener('click', () => {
 // Namen ändern (Schild links vom Balken)
 function nameAendern() {
   const neu = prompt('Wie heisst dein Kätzchen?', daten.katze.name);
-  const name = neu?.trim().slice(0, 14);
+  const name = sauber(neu);
   if (!name) return;
   daten.katze.name = name;
   speichern();
@@ -581,7 +590,7 @@ function zeichneLaden() {
       <svg class="art-bild" viewBox="-95 -172 200 182" aria-hidden="true">${svg}</svg>
       ${frei ? '' : '<span class="art-schloss" aria-hidden="true">🔒</span>'}
       <h3>${art.name}</h3>
-      <p class="art-tage">${art.satz}<br>${art.tage} Tage bis gross</p>
+      <p class="art-tage">${art.satz}<br>${zahl(milchBisGross(art) / 1000)} l Wasser bis gross</p>
       ${knopf}${fehlt}`;
     laden.raster.appendChild(karte);
   }
@@ -662,16 +671,29 @@ document.addEventListener('keydown', (e) => { if (e.key === 'Escape') schliesseL
 // Auf . o P = S dürfen die Katzen laufen. Auf den Kissen (S) schlafen sie am liebsten.
 // Hat der Garten viele Katzen, kommen vorne weitere Reihen dazu.
 
-const INSEL_KARTE = [
+// bis 2 Katzen: kleine Insel
+const INSEL_KLEIN = [
   'HT.S.',
   '..o.W',
   '~~=~~',
   'Ko.PS',
   'B.P.o',
 ];
-const INSEL_ZUSATZ = ['.oP.N', 'o.P.o'];
+// ab 3 Katzen: grosse Insel mit mehr Wiese, Kissen und Bäumen
+const INSEL_GROSS = [
+  'HT.S.oB',
+  '..o.W..',
+  '~~=~~~~',
+  'Ko.PS.T',
+  'B.P.o.S',
+  '.oP.N..',
+  'o.P..oW',
+];
+const INSEL_ZUSATZ = ['.oP.o.N', 'o.P.So.']; // je 3 Katzen mehr (ab 7) eine Reihe dazu
+const GARTEN_GROSS_AB = 3;
 const BEGEHBAR = '.oP=S';
 const INSEL_A = 30;        // halbe Feldbreite (Feld = 60 × 30)
+const INSEL_BREITE_KLEIN = 2 * 22 + 10 * 30; // Breite der kleinen Insel (5 × 5 Felder)
 const INSEL_TIEFE = 44;    // Dicke der Insel
 const INSEL_RAND = 22;
 const INSEL_OBEN = 70;     // Platz über der Insel für Haus und Bäume
@@ -701,10 +723,10 @@ function gartenListe() {
 }
 
 function inselKarte(anzahl) {
-  const karte = [...INSEL_KARTE];
-  const begehbar = () => [...karte.join('')].filter((t) => BEGEHBAR.includes(t)).length;
-  let n = 0;
-  while (begehbar() < anzahl + 8) karte.splice(karte.length - 1, 0, INSEL_ZUSATZ[n++ % INSEL_ZUSATZ.length]);
+  if (anzahl < GARTEN_GROSS_AB) return [...INSEL_KLEIN];
+  const karte = [...INSEL_GROSS];
+  const extra = Math.max(0, Math.ceil((anzahl - 6) / 3));
+  for (let n = 0; n < extra; n++) karte.splice(karte.length - 1, 0, INSEL_ZUSATZ[n % INSEL_ZUSATZ.length]);
   return karte;
 }
 
@@ -879,6 +901,8 @@ function zeichneInselBoden(karte) {
   garten.boden.setAttribute('viewBox', `0 0 ${rund(breite)} ${rund(hoehe)}`);
   garten.boden.innerHTML = s;
   garten.insel.style.aspectRatio = `${rund(breite)} / ${rund(hoehe)}`;
+  // Felder bleiben gleich gross: eine grössere Insel ist breiter als der Bildschirm und lässt sich wischen
+  garten.insel.style.width = `${Math.max(100, rund((breite / INSEL_BREITE_KLEIN) * 100))}%`;
 }
 
 // Ein Element genau über einen Bereich der Insel legen (Masse in Insel-Einheiten)
@@ -1208,6 +1232,9 @@ function oeffneGarten(quelle = 'ich') {
   zeichneGarten();
   starteGartenKatzen();
   garten.seite.scrollTop = 0;
+  // grosse Insel: in der Mitte anfangen
+  const huelle = garten.insel.parentElement;
+  huelle.scrollLeft = (huelle.scrollWidth - huelle.clientWidth) / 2;
   $('#garten-zurueck').focus();
 }
 
@@ -1229,22 +1256,38 @@ document.addEventListener('keydown', (e) => { if (e.key === 'Escape') schliesseG
 function trinken(ml) {
   const vorher = heuteMl();
   daten.eintraege.push({ ml, zeit: jetzt() });
+  const portion = fuettereAutomatisch();
+  const gross = daten.katze.status === 'fertig';
   speichern();
+  if (portion > 0) fuettertGerade = true; // Katze erst nach dem Schlecken grösser zeichnen
   zeichne();
 
   zeigeTrinkBlase(ml);
-  huepfen();
-
   const nachher = heuteMl();
-  // Sprechblase erst nach dem Platzen der Tropfen-Blase zeigen
+  const zielSatz = vorher < ZIEL_ML && nachher >= ZIEL_ML ? 'Geschafft! 2 Liter 🎉 ' : '';
+  // nach dem Platzen der Tropfen-Blase: Milch giessen (oder nur eine Sprechblase).
+  // Eigener Zeitgeber, damit Antippen oder ein weiteres Getränk die Milch nicht verschluckt.
   el.blase.innerHTML = '';
   clearTimeout(blaseTimer);
-  blaseTimer = setTimeout(() => {
-    if (vorher < ZIEL_ML && nachher >= ZIEL_ML) kurzeBlase('Geschafft! 2 Liter 🎉', false, 3500);
-    else if (satt()) kurzeBlase('Danke! Ich bin aber schon satt 😺');
-    else kurzeBlase('Jetzt gibt es Milch! Tipp auf die Flasche 🍼', false, 3200);
+  blaseTimer = setTimeout(() => { blaseTimer = null; }, 1300); // so lange keine andere Sprechblase
+  clearTimeout(trinken.milchTimer);
+  trinken.milchTimer = setTimeout(() => {
+    if (portion > 0) {
+      milchAnimation(portion, () => {
+        if (gross) kurzeBlase('Ich bin gross geworden! 🎉', false, 4000);
+        else kurzeBlase(`${zielSatz}Mmh, Milch! +${dl(portion)} 😋`, false, 3200);
+      });
+    } else {
+      fuettertGerade = false; // falls ein vorheriges Getränk noch wartete
+      letzteZeichnung = '';
+      zeichne();
+      starteAnimation('huepfen');
+      if (zielSatz) kurzeBlase(zielSatz, false, 3500);
+      else if (satt()) kurzeBlase('Danke! Ich bin aber schon pappsatt 😺');
+      else kurzeBlase('Danke! 💧');
+    }
   }, 1300);
-  el.ansage.textContent = `${dl(ml)} eingetragen. Heute ${liter(nachher)}.`;
+  el.ansage.textContent = `${dl(ml)} eingetragen. Heute ${liter(nachher)}.${portion > 0 ? ` Dein Kätzchen bekommt ${dl(portion)} Milch.` : ''}`;
 
   zeigeRueckgaengig();
 }
@@ -1316,12 +1359,6 @@ function starteAnimation(klasse) {
   el.huelle.classList.remove('federn', 'huepfen', 'wachsen', 'schlecken');
   void el.huelle.getBBox(); // Animation neu starten
   el.huelle.classList.add(klasse);
-}
-
-function huepfen() {
-  // Freudenhüpfer kurz nach dem Platzen der Blase
-  clearTimeout(huepfen.timer);
-  huepfen.timer = setTimeout(() => starteAnimation('huepfen'), 1250);
 }
 
 // Herz an der Stelle des Fingers (Bildschirm → Szene umrechnen)
@@ -1571,14 +1608,22 @@ const FREUNDIN_BILD = `<svg viewBox="0 0 60 60">
   <path d="M41 13 L44 7 L47 14Z M47 14 L52 9 L52 17Z" fill="#E8A866"/>
 </svg>`;
 
+// Was die Freundin heute getrunken hat (ein Stand von gestern zählt heute nicht mehr)
+function freundinHeuteMl() {
+  const fr = daten.freundin;
+  return fr.stand && tagesSchluessel(fr.stand) !== heute() ? 0 : fr.heuteMl;
+}
+
 function freundinZustand() {
   const fr = daten.freundin;
   if (fr.status === 'fertig') return 'fertig';
+  if (fr.status === 'weg') return 'weg';
   const t = jetzt();
-  // ohne genaue Zeit: Beispiel-Freundin hat vor 1 Stunde zuletzt getrunken
-  const letzte = fr.letzteTrinkZeit ?? t - 60 * 60 * 1000;
-  return katzenZustand({ heuteMl: fr.heuteMl, jetzt: t, letzteTrinkZeit: letzte });
+  // ohne genaue Zeit: Freundin hat vor 1 Stunde zuletzt getrunken
+  const letzte = fr.letzteTrinkZeit ?? (fr.stand || t - 60 * 60 * 1000);
+  return katzenZustand({ heuteMl: freundinHeuteMl(), jetzt: t, letzteTrinkZeit: letzte });
 }
+const freundinBild = (zustand) => (zustand === 'weg' ? 'traurig' : zustand);
 
 function zeichneFreundinMini() {
   const fr = daten.freundin;
@@ -1587,7 +1632,7 @@ function zeichneFreundinMini() {
   const schluessel = [fr.artId, zustand, g].join('|');
   if (schluessel === freundinUi.letzteMini) return;
   freundinUi.letzteMini = schluessel;
-  const { svg, hoehe } = zeichneKatze({ art: artNachId(fr.artId), groesse: g, zustand, effekte: false });
+  const { svg, hoehe } = zeichneKatze({ art: artNachId(fr.artId), groesse: g, zustand: freundinBild(zustand), effekte: false });
   // nur Kopf und Brust zeigen
   const h = Math.max(70, hoehe * 0.75);
   el.freundinMini.setAttribute('viewBox', `${rund(-h * 0.55)} ${rund(-hoehe - 4)} ${rund(h * 1.1)} ${rund(h * 1.1)}`);
@@ -1599,7 +1644,13 @@ const FREUNDIN_SATZ = {
   traurig: (k) => `${k} ist ein bisschen traurig 😿`,
   hungrig: (k, n) => `${k} hat Hunger 🥺 Stups ${n} an!`,
   fertig: (k) => `${k} ist gross geworden 🎉`,
+  weg: (k) => `${k} ist abgehauen 😿`,
 };
+
+function standText(ms) {
+  const d = new Date(ms);
+  return `${d.getDate()}.${d.getMonth() + 1}., ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+}
 
 function zeichneFreundinKarte() {
   const fr = daten.freundin;
@@ -1611,18 +1662,21 @@ function zeichneFreundinKarte() {
   freundinUi.titel.textContent = fr.name;
   freundinUi.bild.innerHTML = FREUNDIN_BILD;
 
-  const { svg } = zeichneKatze({ art, groesse: g, zustand });
+  const { svg } = zeichneKatze({ art, groesse: g, zustand: freundinBild(zustand) });
   freundinUi.katze.innerHTML = `${svg}
     <g transform="translate(0 14)"><rect x="-44" y="-11" width="88" height="22" rx="11" fill="#fff" opacity=".92"/>
     <text class="t-namensschild" x="0" y="5" text-anchor="middle">${fr.katzenName}</text></g>`;
   freundinUi.katze.setAttribute('aria-label', `${fr.katzenName}, ${art.name}, ${liter(fr.milch)} von ${liter(bisGross)} Milch. ${FREUNDIN_SATZ[zustand](fr.katzenName, fr.name)}`);
 
-  freundinUi.ml.textContent = `${zahl(fr.heuteMl / 1000)} von 2 l`;
-  freundinUi.mlBalken.style.width = `${Math.min(100, fr.heuteMl / ZIEL_ML * 100)}%`;
+  const frMl = freundinHeuteMl();
+  freundinUi.ml.textContent = `${zahl(frMl / 1000)} von 2 l`;
+  freundinUi.mlBalken.style.width = `${Math.min(100, frMl / ZIEL_ML * 100)}%`;
   freundinUi.streak.textContent = fr.streak;
   const anzahl = (fr.garten || []).length;
   $('#fr-garten-knopf').textContent = `🐾 ${fr.name}s Katzengarten ansehen · ${anzahl}`;
-  freundinUi.zustand.textContent = `${FREUNDIN_SATZ[zustand](fr.katzenName, fr.name)} · 🍼 ${zahl(fr.milch / 1000)}/${bisGross / 1000} l`;
+  freundinUi.zustand.textContent = `${FREUNDIN_SATZ[zustand](fr.katzenName, fr.name)} · 🍼 ${zahl(fr.milch / 1000)}/${bisGross / 1000} l`
+    + (fr.stand ? ` · Stand ${standText(fr.stand)}` : '');
+  $('#fr-beispiel').hidden = !fr.beispiel;
   zeichneAnstupsKnopf();
 }
 
@@ -1637,7 +1691,9 @@ function zeichneAnstupsKnopf() {
     freundinUi.knopf.disabled = false;
     freundinUi.knopf.textContent = 'Anstupsen 💧';
   }
-  freundinUi.hinweis.textContent = `${fr.name} bekommt: «${daten.name || 'Deine Freundin'} hat dich angestupst 💧»`;
+  freundinUi.hinweis.textContent = fr.beispiel
+    ? ''
+    : `${fr.name} bekommt: «${daten.name || 'Deine Freundin'} stupst dich an: Trink was! 💧»`;
 }
 
 function oeffneFreundin() {
@@ -1654,15 +1710,27 @@ function schliesseFreundin() {
   freundinUi.zurueckFokus?.focus?.();
 }
 
-function anstupsen() {
+async function anstupsen() {
   if (freundinUi.knopf.disabled) return;
-  daten.angestupstUm = jetzt();
-  speichern();
+  const fr = daten.freundin;
   // die Katze der Freundin hüpft kurz
   freundinUi.katze.querySelector('.katze')?.classList.add('federn');
+  if (fr.beispiel) {
+    zeigeMeldung('Lea ist nur ein Beispiel. Lade deine Kollegin ein 📨', false);
+    return;
+  }
+  const name = meinName();
+  if (!name) return;
+  // ohne Server geht das Anstupsen als Nachricht (z. B. über Nachrichten oder WhatsApp)
+  const geschickt = await teilen({
+    titel: 'Anstupsen 💧',
+    text: `${name} stupst dich an: Trink was! 💧 ${fr.katzenName} wartet auf Milch.`,
+    url: APP_URL,
+  }, `Du hast ${fr.name} angestupst 💧`);
+  if (!geschickt) return;
+  daten.angestupstUm = jetzt();
+  speichern();
   zeichneAnstupsKnopf();
-  zeigeMeldung(`Du hast ${daten.freundin.name} angestupst 💧`);
-  // Später geht hier die echte Nachricht über den Server an die Freundin raus.
 }
 
 function zeigeMeldung(text, mitBild = true) {
@@ -1721,31 +1789,139 @@ function uhrLink() {
   return new URL(`uhr.html#${p}`, location.href).href;
 }
 
-async function aufDieUhr() {
-  const url = uhrLink();
-  const tipp = 'Öffne den Link auf der Apple Watch, z. B. in Nachrichten antippen ⌚';
+// Teilen über das Teilen-Menü des Handys (Nachrichten, WhatsApp, Mail …), sonst Link kopieren.
+// Ergebnis: true, wenn etwas geteilt oder kopiert wurde.
+async function teilen({ titel, text, url }, erfolg) {
   if (navigator.share) {
     try {
-      await navigator.share({ title: 'Katzengarten ⌚', text: `${daten.katze.name} für die Apple Watch`, url });
-      zeigeMeldung(tipp, false);
-      return;
+      await navigator.share({ title: titel, text, url });
+      zeigeMeldung(erfolg, false);
+      return true;
     } catch (e) {
-      if (e.name === 'AbortError') return;
+      if (e.name === 'AbortError') return false;
     }
   }
   try {
-    await navigator.clipboard.writeText(url);
-    zeigeMeldung(`Link kopiert. ${tipp}`, false);
+    await navigator.clipboard.writeText(`${text} ${url}`);
+    zeigeMeldung(`Link kopiert. ${erfolg}`, false);
+    return true;
   } catch {
-    window.open(url, '_blank');
+    prompt('Diesen Link kopieren und schicken:', url);
+    return true;
   }
 }
+
+async function aufDieUhr() {
+  await teilen({ titel: 'Katzengarten ⌚', text: `${daten.katze.name} für die Apple Watch`, url: uhrLink() },
+    'Öffne den Link auf der Apple Watch, z. B. in Nachrichten antippen ⌚');
+}
+
+// ---------- Kollegin: einladen, Katze schicken, Katze der Kollegin übernehmen ----------
+// Jede hat ihre eigene Katze und ihren eigenen Garten (gespeichert auf ihrem Handy).
+// Ohne Server schickt man sich die Katze als Link; wer den Link öffnet, sieht sie unter «Freundin».
+
+const APP_URL = new URL('./', location.href).href;
+
+function meinName() {
+  if (!daten.name) {
+    const n = sauber(prompt('Wie heisst du? Deine Kollegin sieht diesen Namen.', ''), 20);
+    if (!n) return null;
+    daten.name = n;
+    speichern();
+  }
+  return daten.name;
+}
+
+// Link-Inhalt: kurzer Text aus Buchstaben und Zahlen (Base64), damit er in jede Nachricht passt
+function packen(obj) {
+  let bin = '';
+  new TextEncoder().encode(JSON.stringify(obj)).forEach((b) => { bin += String.fromCharCode(b); });
+  return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+function auspacken(text) {
+  const bin = atob(text.replace(/-/g, '+').replace(/_/g, '/'));
+  return JSON.parse(new TextDecoder().decode(Uint8Array.from(bin, (c) => c.charCodeAt(0))));
+}
+
+function meineKatzeAlsLink(name) {
+  const k = daten.katze;
+  const inhalt = {
+    v: 1, n: name, t: jetzt(), h: heuteMl(), st: daten.streak,
+    k: { n: k.name, a: k.artId, m: k.milch, s: k.status },
+    g: daten.garten.map((e) => [e.artId, e.name, e.datum]),
+  };
+  return `${APP_URL}#freundin=${packen(inhalt)}`;
+}
+
+// Daten aus einem fremden Link genau prüfen, bevor sie gespeichert werden
+function pruefeFreundin(roh) {
+  const artOk = (id) => ARTEN.some((a) => a.id === id);
+  const zahlIn = (z, min, max) => { const n = Number(z); return Number.isFinite(n) ? Math.min(max, Math.max(min, n)) : min; };
+  if (!roh || roh.v !== 1 || !roh.k || !artOk(roh.k.a)) return null;
+  const art = artNachId(roh.k.a);
+  const stand = zahlIn(roh.t, 0, Date.now() + 400 * TAG_MS);
+  return {
+    beispiel: false,
+    name: sauber(roh.n, 20) || 'Kollegin',
+    katzenName: sauber(roh.k.n) || 'Kätzchen',
+    artId: art.id,
+    milch: zahlIn(roh.k.m, 0, milchBisGross(art)),
+    status: ['waechst', 'fertig', 'weg'].includes(roh.k.s) ? roh.k.s : 'waechst',
+    streak: Math.round(zahlIn(roh.st, 0, 9999)),
+    heuteMl: zahlIn(roh.h, 0, 20000),
+    letzteTrinkZeit: null,
+    stand,
+    garten: (Array.isArray(roh.g) ? roh.g.slice(0, 300) : [])
+      .filter((e) => Array.isArray(e) && artOk(e[0]))
+      .map(([a, n, d]) => ({ artId: a, name: sauber(n) || 'Katze', datum: /^\d{4}-\d{2}-\d{2}$/.test(d) ? d : tagesSchluessel(stand) })),
+  };
+}
+
+// Beim Öffnen: Kommt die App über einen Katzen-Link der Kollegin, diese als Freundin speichern
+function freundinAusLink() {
+  const treffer = location.hash.match(/^#freundin=([A-Za-z0-9_-]{10,20000})$/);
+  if (!treffer) return;
+  history.replaceState(null, '', location.pathname + location.search);
+  let fr = null;
+  try { fr = pruefeFreundin(auspacken(treffer[1])); } catch { /* kaputter Link */ }
+  if (!fr) { zeigeMeldung('Dieser Katzen-Link ist kaputt 😿', false); return; }
+  if (!confirm(`${fr.name} als Freundin speichern? Du siehst dann ihre Katze ${fr.katzenName} und ihren Katzengarten (Stand ${standText(fr.stand)}).`)) return;
+  daten.freundin = fr;
+  daten.angestupstUm = null;
+  freundinUi.letzteMini = '';
+  speichern();
+  zeichne();
+  oeffneFreundin();
+}
+
+$('#einladen-knopf').addEventListener('click', async () => {
+  const name = meinName();
+  if (!name) return;
+  await teilen({
+    titel: 'Katzengarten 🐾',
+    text: `${name} lädt dich ein: Hol dir dein eigenes Kätzchen und trink mit mir! 🐾💧`,
+    url: APP_URL,
+  }, 'Öffnet sie den Link, bekommt sie ihr eigenes Kätzchen und ihren eigenen Garten.');
+});
+
+$('#zeigen-knopf').addEventListener('click', async () => {
+  const name = meinName();
+  if (!name) return;
+  await teilen({
+    titel: `Meine Katze ${daten.katze.name} 🐾`,
+    text: `Das ist meine Katze ${daten.katze.name} mit meinem Katzengarten. Öffne den Link, dann siehst du sie bei dir unter «Freundin».`,
+    url: meineKatzeAlsLink(name),
+  }, 'Öffnet sie den Link, sieht sie deine Katze und deinen Garten.');
+});
+
 $('#uhr-knopf').addEventListener('click', aufDieUhr);
 
 // ---------- Start ----------
 
 abrechnen();
 zeichne();
+freundinAusLink();
+window.addEventListener('hashchange', freundinAusLink); // Link kommt, während die App schon offen ist
 document.fonts?.ready.then(() => { zeigeName(daten.katze.name); if (!blaseTimer) zeigeNormaleBlase(false); });
 // Zustand hängt von der Uhrzeit ab: jede Minute neu prüfen
 setInterval(() => { abrechnen(); zeichne(); }, 60 * 1000);

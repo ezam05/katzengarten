@@ -7,6 +7,7 @@ export const PLAN_START = 8;   // Uhr
 export const PLAN_ENDE = 22;   // Uhr
 export const TAGESWECHSEL = 4; // Uhr: Hier endet ein Tag
 export const HUNGER_NACH_MS = 5 * 60 * 60 * 1000; // 5 Stunden
+export const MILCH_MAX_ML = 3000; // so viel Milch trinkt das Kätzchen höchstens pro Tag (Tagesziel bleibt 2 l)
 
 // Wachstumsstufen nach dem Anteil der getrunkenen Milch
 export const STUFEN = ['Neugeboren', 'Baby', 'Kätzchen', 'Junge Katze', 'Gross'];
@@ -83,12 +84,12 @@ export function glaeserBisZiel(ml) {
   return Math.ceil(Math.max(0, ZIEL_ML - ml) / GLAS_ML);
 }
 
-// Wie viel Milch darf das Kätzchen jetzt trinken?
-// Milch gibt es nur für heute getrunkenes Wasser, höchstens 2 l pro Tag,
+// Wie viel Milch bekommt das Kätzchen jetzt? (Es wird beim Trinken automatisch gefüttert.)
+// Milch gibt es nur für heute getrunkenes Wasser, höchstens 3 l pro Tag,
 // und nicht mehr, als es bis zum Grosswerden noch braucht.
 export function milchPortion({ heuteGetrunken, heuteGefuettert, milch, bisGross }) {
-  const flasche = Math.max(0, heuteGetrunken - heuteGefuettert);
-  return Math.max(0, Math.min(flasche, ZIEL_ML - heuteGefuettert, bisGross - milch));
+  const offen = Math.max(0, heuteGetrunken - heuteGefuettert);
+  return Math.max(0, Math.min(offen, MILCH_MAX_ML - heuteGefuettert, bisGross - milch));
 }
 
 // ---------- Plan und Hunger ----------

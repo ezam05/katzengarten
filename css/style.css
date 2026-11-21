@@ -117,15 +117,14 @@ button:focus-visible, [tabindex]:focus-visible {
 
 /* Katze antippen und streicheln */
 .szene svg { touch-action: none; }
-.katze-huelle, .flasche, .name-knopf { cursor: pointer; outline: none; }
-.katze-huelle:focus-visible, .flasche:focus-visible, .name-knopf:focus-visible { filter: drop-shadow(0 0 3px #fff) drop-shadow(0 0 4px rgba(30, 136, 216, .9)); }
+.katze-huelle, .flasche, .name-knopf, .balken-knopf { cursor: pointer; outline: none; }
+.katze-huelle:focus-visible, .flasche:focus-visible, .name-knopf:focus-visible, .balken-knopf:focus-visible { filter: drop-shadow(0 0 3px #fff) drop-shadow(0 0 4px rgba(30, 136, 216, .9)); }
 .katze-huelle.federn { animation: federn .6s cubic-bezier(.3, 1.4, .5, 1); }
 .katze-huelle.schnurren .katze { animation: schnurren .12s linear infinite; }
 .freundin-buehne .katze.federn { animation: federn .6s cubic-bezier(.3, 1.4, .5, 1); }
 .herz-flug { animation: herz-flug 1.1s ease-out forwards; }
 
 /* Milchflasche und Napf */
-.flasche.bereit { animation: flasche-bereit 1.6s ease-in-out infinite; transform-origin: 0 0; }
 .flasche.wackeln { animation: wackeln .5s ease-in-out; }
 .milchstrahl { opacity: 0; stroke-dasharray: 80; stroke-dashoffset: 80; }
 .napf-milch { opacity: 0; transition: opacity .4s; }
@@ -508,6 +507,8 @@ button:focus-visible, [tabindex]:focus-visible {
 .garten-seite:not([hidden]) { display: flex; flex-direction: column; }
 .insel-huelle {
   position: relative;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
   flex: 1 0 auto;
   display: flex;
   flex-direction: column;
@@ -829,6 +830,10 @@ button:focus-visible, [tabindex]:focus-visible {
 }
 .zweit-knopf:active { background: #EEF7FC; }
 .freundin-hinweis { margin: 8px 4px 0; text-align: center; font-size: 13px; color: #5E6A73; }
+.freundin-beispiel { margin: 14px 4px 0; padding: 10px 12px; border-radius: 14px; background: #FFF6D6; font-size: 13px; line-height: 1.4; color: #5A4A1A; }
+.freundin-beispiel[hidden] { display: none; }
+.teilen-knoepfe { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.teilen-knoepfe .zweit-knopf { font-size: 14px; padding: 0 8px; }
 
 /* Meldung oben */
 .meldung {
@@ -1029,10 +1034,6 @@ button:focus-visible, [tabindex]:focus-visible {
   35%, 55%, 75% { transform: rotate(16deg) translateX(10px) translateY(2px); }
   45%, 65% { transform: rotate(12deg) translateX(10px); }
 }
-@keyframes flasche-bereit {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-5px); }
-}
 @keyframes wackeln {
   0%, 100% { transform: rotate(0); }
   25% { transform: rotate(-8deg); }
@@ -1079,7 +1080,7 @@ button:focus-visible, [tabindex]:focus-visible {
 /* Weniger Bewegung: ruhige Version */
 @media (prefers-reduced-motion: reduce) {
   .k-atmen, .k-schwanz, .k-ohr, .k-blinzeln, .k-zzz, .k-bein-a, .k-bein-b, .funkeln,
-  .schweben, .aktion-knopf, .flasche.bereit {
+  .schweben, .aktion-knopf {
     animation: none !important;
   }
   .konfetti { animation: none !important; opacity: .9; }
