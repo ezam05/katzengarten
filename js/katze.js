@@ -6,7 +6,7 @@
 // Ausgabe: { svg, hoehe } – svg ist Text für ein <g>. Der Punkt (0,0) ist der Boden
 // unter der Katze, die Katze steht nach oben (negative y-Werte).
 //
-// Zustände: 'gluecklich' | 'traurig' | 'hungrig' | 'fertig' | 'gestreichelt' | 'schlafen'
+// Zustände: 'gluecklich' | 'traurig' | 'hungrig' | 'fertig' | 'gestreichelt' | 'schlafen' | 'wuetend' (Krallen raus)
 // Haltungen: 'sitzen' | 'laufen' (von der Seite, Blick nach rechts) | 'schlafen' | 'spielen' (auf dem Rücken mit Wollknäuel)
 // «sitzen» heisst bei der Wolkenkatze «stehen auf 4 Beinen» und bei der Tigerkatze «Bohne».
 //
@@ -190,6 +190,17 @@ function augen(art, f, zustand, k, id) {
     }
     return `<path d="${d}" stroke="${u}" stroke-width="${Math.max(2.6, art.figur.strich)}" fill="none" stroke-linecap="round"/>`;
   }
+  if (zustand === 'wuetend') {
+    // böse: schmale gelbe Augen mit Schlitz-Pupille, dicke Brauen nach innen unten
+    let w = '';
+    for (const seite of [-1, 1]) {
+      const x = ax * seite;
+      w += `<ellipse cx="${x}" cy="${ay + 1}" rx="8.5" ry="5.5" fill="#F4D35E" stroke="${u}" stroke-width="2.2"/>
+        <ellipse cx="${x + seite * 0.5}" cy="${ay + 1}" rx="1.8" ry="5" fill="${f.auge || '#1F1A18'}"/>
+        <path d="M${x + seite * 11} ${ay - 12} L${x - seite * 7} ${ay - 5}" stroke="${u}" stroke-width="4" stroke-linecap="round"/>`;
+    }
+    return w;
+  }
   const hungrig = zustand === 'hungrig', traurig = zustand === 'traurig';
   const gross = (hungrig ? 1.12 : 1) * (1 + 0.12 * k);
   const basis = { gross: [12, 14], rund: [9, 9.5], weiss: [9, 10], verlauf: [8.5, 10] }[stil] || [7.5, 9];
@@ -266,7 +277,12 @@ function gesicht(art, f, zustand, k, id) {
     s += `<path d="M-3.8 -81 Q 0 -82.5 3.8 -81 Q 1.6 -77.5 0 -77 Q -1.6 -77.5 -3.8 -81Z" fill="${f.nase}" stroke="${u}" stroke-width="1.4" stroke-linejoin="round"/>`;
   }
   const froh = zustand === 'gluecklich' || zustand === 'fertig' || zustand === 'gestreichelt';
-  if (zustand === 'hungrig') {
+  if (zustand === 'wuetend') {
+    // fauchen: offenes Maul mit zwei Zähnen
+    const my = fig.nase === 'tropfen' ? -60 : -74;
+    s += `<path d="M-10 ${my} Q 0 ${my + 15} 10 ${my} Q 0 ${my + 3} -10 ${my}Z" fill="#8E2C35" stroke="${u}" stroke-width="1.8" stroke-linejoin="round"/>
+      <path d="M-7 ${my + 0.5} L-5 ${my + 5} L-3 ${my + 1}Z M7 ${my + 0.5} L5 ${my + 5} L3 ${my + 1}Z" fill="#fff"/>`;
+  } else if (zustand === 'hungrig') {
     s += `<ellipse cx="0" cy="${fig.nase === 'tropfen' ? -58 : -72}" rx="3.6" ry="4.2" fill="#A24E50" stroke="${u}" stroke-width="1.8"/>`;
   } else if (fig.mund === 'keiner') {
     // Glückskatze: kein Mund
@@ -294,6 +310,7 @@ function gesicht(art, f, zustand, k, id) {
 function ohren(art, f, zustand, versatz = '') {
   const u = f.umriss, sw = art.figur.strich;
   const haengen = zustand === 'traurig' || zustand === 'hungrig';
+  const flach = zustand === 'wuetend'; // böse: Ohren flach nach hinten
   let s = '';
   for (const seite of [-1, 1]) {
     const farbe = (seite < 0 ? f.ohrL : f.ohrR) || f.fell;
@@ -311,7 +328,7 @@ function ohren(art, f, zustand, versatz = '') {
       }
     }
     // Drehpunkt am Ohransatz; traurig/hungrig: Ohren hängen nach aussen
-    s += `<g transform="scale(${seite} 1)"><g transform="translate(-26 -112)"><g class="${seite > 0 ? 'k-ohr' : ''}"><g transform="rotate(${haengen ? -22 : 0}) translate(26 112)">${ohr}</g></g></g></g>`;
+    s += `<g transform="scale(${seite} 1)"><g transform="translate(-26 -112)"><g class="${seite > 0 ? 'k-ohr' : ''}"><g transform="rotate(${flach ? -55 : haengen ? -22 : 0}) translate(26 112)">${ohr}</g></g></g></g>`;
   }
   return versatz ? `<g transform="${versatz}">${s}</g>` : s;
 }
@@ -498,6 +515,16 @@ function fotoKatze({ art, groesse, zustand, pose, effekte, zweite, feiern }) {
   return { svg: `<g class="katze foto art-${art.id} zustand-${zustand} pose-${pose}${zweite ? ' zweite' : ''}">${svg}</g>`, hoehe };
 }
 
+// Erhobene Pfote mit ausgefahrenen Krallen (Zustand «wuetend»)
+export function krallenPfote(f, strich = 2.6) {
+  const kralle = (x, w) => `<path transform="translate(${x} -13) rotate(${w})" d="M-3 0 Q -1 -12 1.5 -19 Q 2.5 -9 3 0Z" fill="#FFFDF6" stroke="${f.umriss}" stroke-width="1.5" stroke-linejoin="round"/>`;
+  return `<g class="k-krallen">
+    <path d="M-7 30 C -9 12 -10 2 -9 -4 L 9 -4 C 10 2 9 12 7 30Z" fill="${f.fell}" stroke="${f.umriss}" stroke-width="${strich}" stroke-linejoin="round"/>
+    ${kralle(-9, -28)}${kralle(-3, -9)}${kralle(3, 9)}${kralle(9, 28)}
+    <ellipse cx="0" cy="-6" rx="13" ry="10" fill="${f.pfote || f.bauch}" stroke="${f.umriss}" stroke-width="${strich}"/>
+    <g fill="${f.ballen || '#F2A7B8'}"><ellipse cx="0" cy="-3" rx="4.5" ry="3.4"/><circle cx="-6" cy="-9" r="2"/><circle cx="0" cy="-11" r="2"/><circle cx="6" cy="-9" r="2"/></g></g>`;
+}
+
 // ---------- Effekte ----------
 
 function funkelStern(x, y, g, nr) {
@@ -604,6 +631,9 @@ export function zeichneKatze({ art, groesse = 1, zustand = 'gluecklich', pose = 
     hoeheEinheiten = -(dy - 64 + hs * (ohrOben + 64));
   }
 
+  if (zustand === 'wuetend' && pose !== 'schlafen') {
+    figur += `<g transform="translate(40 -60) rotate(18)">${krallenPfote(f, fig.strich)}</g>`;
+  }
   const hoehe = hoeheEinheiten * s;
   let svg = `${ausschnitte(art, id)}
     <ellipse cx="0" cy="0" rx="${r1(46 * s)}" ry="${r1(7 * s)}" fill="#1E4A10" opacity=".18"/>

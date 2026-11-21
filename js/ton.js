@@ -117,6 +117,28 @@ export function datei(url, bis = 0) {
   } catch { return false; }
 }
 
+// Fauchen: kurzes Rauschen (Zischen), laut einsetzend und abklingend
+export function fauchen() {
+  const a = audio();
+  if (!a) return;
+  const dauer = 0.9;
+  const puffer = a.createBuffer(1, Math.floor(a.sampleRate * dauer), a.sampleRate);
+  const d = puffer.getChannelData(0);
+  for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
+  const q = a.createBufferSource();
+  q.buffer = puffer;
+  const filter = a.createBiquadFilter();
+  filter.type = 'highpass';
+  filter.frequency.value = 2200;
+  const laut = a.createGain();
+  const t = a.currentTime;
+  laut.gain.setValueAtTime(0.0001, t);
+  laut.gain.exponentialRampToValueAtTime(0.5, t + 0.05);
+  laut.gain.exponentialRampToValueAtTime(0.0001, t + dauer);
+  q.connect(filter).connect(laut).connect(a.destination);
+  q.start(t);
+}
+
 // Plätschern: ein paar kurze «Blubb»-Töne (Milch in den Napf)
 export function plaetschern() {
   const a = audio();

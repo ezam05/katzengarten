@@ -932,6 +932,19 @@ button:focus-visible, [tabindex]:focus-visible {
 .pose-schlafen .k-blinzeln, .zustand-gestreichelt .k-blinzeln { animation: none; }
 .konfetti { animation: konfetti 3s linear infinite; }
 .k-wolle { animation: wolle 1.1s ease-in-out infinite; }
+/* Hässig: Kratzer über den Bildschirm */
+.kratzer { position: absolute; inset: 0; z-index: 30; pointer-events: none; }
+.kratzer[hidden] { display: none; }
+.kratzer svg { width: 100%; height: 100%; display: block; }
+.kratz-spur path { fill: none; stroke: #7A1E28; stroke-width: 11; stroke-linecap: round; stroke-dasharray: 700; stroke-dashoffset: 700; filter: drop-shadow(0 0 0 #fff) drop-shadow(2px 2px 0 rgba(255, 255, 255, .7)); }
+.kratzer.kratzt .kratz-spur path { animation: kratzen .28s cubic-bezier(.5, 0, .9, .6) forwards, kratzer-weg .6s ease-in 2.9s forwards; }
+.kratzer.kratzt .kratz-spur path:nth-child(2) { animation-delay: .05s, 2.9s; }
+.kratzer.kratzt .kratz-spur path:nth-child(3) { animation-delay: .1s, 2.9s; }
+.kratzer.kratzt .kratz-spur path:nth-child(4) { animation-delay: .15s, 2.9s; }
+@keyframes kratzen { to { stroke-dashoffset: 0; } }
+@keyframes kratzer-weg { to { opacity: 0; } }
+.app.schuetteln { animation: schuetteln .45s ease-in-out 2; }
+@keyframes schuetteln { 0%, 100% { transform: translateX(0); } 20% { transform: translateX(-8px) rotate(-1deg); } 40% { transform: translateX(7px) rotate(1deg); } 60% { transform: translateX(-5px); } 80% { transform: translateX(4px); } }
 /* Foto-Katzen */
 .k-sprite { animation-name: sprite; animation-timing-function: steps(var(--sprite-bilder)); animation-iteration-count: infinite; }
 @keyframes sprite { to { transform: translateX(var(--sprite-weg)); } }
@@ -1158,6 +1171,7 @@ button:focus-visible, [tabindex]:focus-visible {
 
 /* Weniger Bewegung: ruhige Version */
 @media (prefers-reduced-motion: reduce) {
+  .app.schuetteln { animation: none !important; }
   .k-atmen, .k-schwanz, .k-ohr, .k-blinzeln, .k-zzz, .k-bein-a, .k-bein-b, .k-wolle, .funkeln,
   .schweben, .aktion-knopf {
     animation: none !important;

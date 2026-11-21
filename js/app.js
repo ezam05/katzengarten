@@ -2,7 +2,7 @@
 
 import { ARTEN, artNachId, milchBisGross } from './arten.js';
 import { zeichneKatze, zufall, wollknaeuel } from './katze.js';
-import { miau, schnurrenStart, schnurrenStopp, plaetschern, tonAn, tonEntsperren, datei } from './ton.js';
+import { miau, schnurrenStart, schnurrenStopp, plaetschern, tonAn, tonEntsperren, datei, fauchen } from './ton.js';
 import {
   STUFEN, ZIEL_ML, stufeFuerMilch, groesseFuerMilch, milchFuerStufe, ZURUECKHOLEN_PREIS, tagesSchluessel, zeitImTag, stundeImTag,
   eintraegeVomTag, summeMl, glaeserBisZiel, katzenZustand, milchPortion,
@@ -324,7 +324,7 @@ function zeigeFlasche() {
 function zeichne() {
   const art = katzenArt();
   const zustand = aktuellerZustand();
-  const bild = streichelt ? 'gestreichelt' : zustand;
+  const bild = Date.now() < wuetendBis && zustand !== 'weg' ? 'wuetend' : streichelt ? 'gestreichelt' : zustand;
   const g = demo.zustand === 'fertig' ? 1 : groesse();
   const ml = heuteMl();
 
@@ -1595,7 +1595,48 @@ function zeigeZweiteKatze() {
 }
 const startTipps = [];
 
+// Mehr als 10× in 15 Sekunden antippen: die Katze wird hässig und kratzt den Bildschirm
+const WUETEND_TIPPS = 10, WUETEND_FENSTER_MS = 15000, WUETEND_DAUER_MS = 3500;
+const wutTipps = [];
+let wuetendBis = 0;
+function zuVieleTipps() {
+  const t = Date.now();
+  wutTipps.push(t);
+  while (wutTipps.length && t - wutTipps[0] > WUETEND_FENSTER_MS) wutTipps.shift();
+  return wutTipps.length > WUETEND_TIPPS;
+}
+function wirdHaessig() {
+  wutTipps.length = 0;
+  startTipps.length = 0;
+  wuetendBis = Date.now() + WUETEND_DAUER_MS;
+  zweiteBis = 0;
+  letzteZeichnung = '';
+  zeichne();
+  fauchen();
+  kurzeBlase('Grrr! Lass mich in Ruhe! 😾', true, WUETEND_DAUER_MS);
+  // Kratzer über den ganzen Bildschirm, App wackelt
+  const k = $('#kratzer');
+  k.hidden = false;
+  k.classList.remove('kratzt');
+  void k.offsetWidth;
+  k.classList.add('kratzt');
+  $('.app').classList.remove('schuetteln');
+  void $('.app').offsetWidth;
+  $('.app').classList.add('schuetteln');
+  el.ansage.textContent = `${daten.katze.name} ist hässig und kratzt.`;
+  clearTimeout(wirdHaessig.timer);
+  wirdHaessig.timer = setTimeout(() => {
+    k.hidden = true;
+    $('.app').classList.remove('schuetteln');
+    letzteZeichnung = '';
+    zeichne();
+  }, WUETEND_DAUER_MS);
+}
+
 function antippen() {
+  // UU II AA (Foto-Katze) wird nie hässig (Wunsch 2026-11-21)
+  if (daten.katze.status !== 'weg' && !katzenArt().figur.foto && zuVieleTipps()) { wirdHaessig(); return; }
+  if (Date.now() < wuetendBis) { kurzeBlase('Grrr! 😾', true, 1500); return; }
   if (katzenArt().figur.foto2 && daten.katze.status !== 'weg' && zaehleTipps(startTipps)) { startTipps.length = 0; zeigeZweiteKatze(); return; }
   starteAnimation('federn');
   if (daten.katze.status !== 'weg') miau({ hoch: aktuellerZustand() === 'hungrig' ? 1.15 : 1, lang: aktuellerZustand() === 'hungrig' ? 1.4 : 1 });
