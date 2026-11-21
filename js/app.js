@@ -531,9 +531,17 @@ function literMuenzenAbgleichen() {
 // ---------- Gross: in den Garten ----------
 
 // Art für die nächste Katze (im Laden gewählt, sonst gleiche Art)
+// Aktionstag: heute sind alle Katzen gratis und man kann jederzeit wechseln (Wunsch 2026-11-21).
+// Ab morgen gilt wieder: nur mit Münzen gekaufte Katzen. Eine heute gewählte Katze bleibt, bis sie gross ist.
+const AKTIONSTAG = '2026-11-21';
+const aktionHeute = () => heute() === AKTIONSTAG;
+const istFrei = (id) => daten.freigeschaltet.includes(id) || aktionHeute();
+
 function naechsteArt() {
   const id = daten.naechsteArtId;
-  return id && daten.freigeschaltet.includes(id) ? id : daten.katze.artId;
+  if (id && istFrei(id)) return id;
+  // die jetzige Art, wenn sie gekauft ist; sonst (z. B. nach dem Aktionstag) die erste gekaufte
+  return istFrei(daten.katze.artId) ? daten.katze.artId : daten.freigeschaltet[0];
 }
 
 function neueKatze(artId) {
@@ -619,16 +627,21 @@ const laden = {
 
 // Kann die aktuelle Katze sofort gewechselt werden? (nur ein Baby ohne Milch)
 function kannSofortWechseln() {
+  if (aktionHeute()) return daten.katze.status !== 'fertig'; // heute jederzeit (nicht, wenn sie gross auf den Garten wartet)
   return daten.katze.status === 'weg' || (daten.katze.status === 'waechst' && daten.katze.milch === 0);
 }
 
+const LADEN_HINWEIS = document.querySelector('.laden-hinweis').innerHTML;
 function zeichneLaden() {
+  document.querySelector('.laden-hinweis').innerHTML = (aktionHeute()
+    ? '<strong>🎉 Heute sind alle Katzen gratis, und du kannst jederzeit wechseln. Ab morgen gelten wieder die 🪙.</strong><br>' : '') + LADEN_HINWEIS;
   laden.muenzen.textContent = `🪙 ${daten.muenzen}`;
   laden.muenzen.setAttribute('aria-label', `${daten.muenzen} Münzen`);
   const naechste = naechsteArt();
   laden.raster.innerHTML = '';
   for (const art of ARTEN) {
-    const frei = daten.freigeschaltet.includes(art.id);
+    const gekauft = daten.freigeschaltet.includes(art.id);
+    const frei = gekauft || aktionHeute();
     const waechst = art.id === daten.katze.artId;
     const istNaechste = frei && art.id === naechste;
     const karte = document.createElement('article');
@@ -636,6 +649,7 @@ function zeichneLaden() {
 
     const { svg } = zeichneKatze({ art, groesse: 1, zustand: 'gluecklich', effekte: false });
     let marke = '';
+    if (aktionHeute() && !gekauft) marke = '<span class="art-marke">🎉 Heute gratis</span>';
     if (waechst) marke = '<span class="art-marke">🍼 Bei dir</span>';
     else if (istNaechste) marke = '<span class="art-marke">⏭️ Als Nächstes</span>';
 
@@ -645,7 +659,7 @@ function zeichneLaden() {
       if (istNaechste) {
         knopf = `<button class="art-knopf" type="button" disabled>✓ Als Nächstes</button>`;
       } else {
-        const text = kannSofortWechseln() ? 'Jetzt adoptieren' : 'Als Nächstes';
+        const text = kannSofortWechseln() ? (aktionHeute() && daten.katze.milch > 0 ? 'Jetzt wechseln' : 'Jetzt adoptieren') : 'Als Nächstes';
         knopf = `<button class="art-knopf blau" type="button" data-waehlen="${art.id}" aria-label="${art.name}: ${text}">${text}</button>`;
       }
     } else if (daten.muenzen >= art.preis) {
@@ -707,15 +721,17 @@ function kaufen(id) {
 
 function waehleArt(id) {
   const art = artNachId(id);
-  if (!daten.freigeschaltet.includes(id)) return;
+  if (!istFrei(id)) return;
   daten.naechsteArtId = id;
   if (kannSofortWechseln()) {
     if (daten.katze.status === 'weg') { neueKatze(id); daten.vortagMl = null; }
     daten.katze.artId = id;
+    // Aktionstag: die Milch kommt mit, aber nicht so viel, dass die neue Katze sofort gross ist
+    daten.katze.milch = Math.min(daten.katze.milch, milchBisGross(art) - 1);
     speichern();
     schliesseLaden();
     zeichne();
-    kurzeBlase(`Hallo! Ich bin ein ${art.name}-Baby 🍼`, false, 3500);
+    kurzeBlase(daten.katze.milch > 0 ? `Hallo! Ich bin jetzt ${art.name} 🐾` : `Hallo! Ich bin ein ${art.name}-Baby 🍼`, false, 3500);
   } else {
     speichern();
     zeichneLaden();
