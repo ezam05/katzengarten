@@ -1,6 +1,6 @@
 // Kurzer Selbsttest der Rechenregeln. Starten mit: node tests/regeln.test.mjs
 import assert from 'node:assert/strict';
-import { milchPortion, rechneTagAb, hautAb, stufeFuerMilch, tagesSchluessel, zuerichZuMs } from '../js/regeln.js';
+import { milchPortion, rechneTagAb, hautAb, katzenZustand, stufeFuerMilch, tagesSchluessel, zuerichZuMs } from '../js/regeln.js';
 
 // Milch nur für heute getrunkenes Wasser, höchstens 3 l pro Tag (2 l ist nicht die Grenze), nicht mehr als nötig
 assert.equal(milchPortion({ heuteGetrunken: 500, heuteGefuettert: 0, milch: 0, bisGross: 14000 }), 500);
@@ -27,5 +27,10 @@ assert.equal(stufeFuerMilch(0, 14000), 0);
 assert.equal(stufeFuerMilch(14000, 14000), 4);
 assert.equal(tagesSchluessel(zuerichZuMs(2026, 11, 21, 3, 59)), '2026-11-20');
 assert.equal(tagesSchluessel(zuerichZuMs(2026, 11, 21, 4, 0)), '2026-11-21');
+
+// Nach einem Getränk 45 Minuten zufrieden, danach wieder nach Plan
+const mittag = zuerichZuMs(2026, 11, 21, 14, 0);
+assert.equal(katzenZustand({ heuteMl: 250, jetzt: mittag, letzteTrinkZeit: mittag - 10 * 60 * 1000 }), 'gluecklich');
+assert.equal(katzenZustand({ heuteMl: 250, jetzt: mittag, letzteTrinkZeit: mittag - 60 * 60 * 1000 }), 'traurig');
 
 console.log('Alle Regeln stimmen ✓');

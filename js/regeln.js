@@ -7,6 +7,7 @@ export const PLAN_START = 8;   // Uhr
 export const PLAN_ENDE = 22;   // Uhr
 export const TAGESWECHSEL = 4; // Uhr: Hier endet ein Tag
 export const HUNGER_NACH_MS = 5 * 60 * 60 * 1000; // 5 Stunden
+export const FROH_NACH_TRINKEN_MS = 45 * 60 * 1000; // nach einem Getränk ist die Katze 45 Minuten zufrieden
 export const MILCH_MAX_ML = 3000; // so viel Milch trinkt das Kätzchen höchstens pro Tag (Tagesziel bleibt 2 l)
 
 // Wachstumsstufen nach dem Anteil der getrunkenen Milch
@@ -118,6 +119,8 @@ export function erinnerungFaellig({ heuteMl, jetzt, letzteTrinkZeit }) {
 // Laufender Zustand der Katze: 'gluecklich' | 'traurig' | 'hungrig'
 export function katzenZustand({ heuteMl, jetzt, letzteTrinkZeit }) {
   if (heuteMl >= ZIEL_ML) return 'gluecklich';
+  // gerade Milch bekommen: nicht gleich wieder traurig schauen (Befund Usertest 2026-11-21)
+  if (letzteTrinkZeit && jetzt - letzteTrinkZeit >= 0 && jetzt - letzteTrinkZeit < FROH_NACH_TRINKEN_MS) return 'gluecklich';
   const stunde = stundeImTag(jetzt);
   if (!hinterDemPlan(heuteMl, stunde)) return 'gluecklich';
   if (erinnerungFaellig({ heuteMl, jetzt, letzteTrinkZeit })) return 'hungrig';

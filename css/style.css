@@ -427,10 +427,10 @@ button:focus-visible, [tabindex]:focus-visible {
 /* Rückgängig-Pille neben dem Tropfen */
 .rueckgaengig {
   position: absolute;
-  left: calc(50% + 50px);
-  bottom: calc(var(--leiste-h) + var(--sicher-unten) + 10px);
+  left: calc(50% + 46px);
+  bottom: calc(var(--leiste-h) + var(--sicher-unten) - 2px); /* unter dem Balken, damit er sichtbar bleibt */
   z-index: 6;
-  min-height: 44px;
+  min-height: 40px;
   padding: 0 16px;
   border-radius: 999px;
   background: rgba(255, 255, 255, .95);
@@ -830,6 +830,12 @@ button:focus-visible, [tabindex]:focus-visible {
 }
 .zweit-knopf:active { background: #EEF7FC; }
 .freundin-hinweis { margin: 8px 4px 0; text-align: center; font-size: 13px; color: #5E6A73; }
+/* Beispiel-Freundin: Einladen steht oben, damit man es ohne Scrollen findet */
+.freundin-blatt { display: flex; flex-direction: column; }
+.freundin-blatt > .griff { order: -3; }
+.freundin-blatt > .unterblatt-kopf { order: -2; }
+.freundin-blatt.beispiel > .freundin-beispiel, .freundin-blatt.beispiel > .teilen-knoepfe { order: -1; }
+.freundin-blatt.beispiel > .freundin-beispiel { margin: 10px 4px 8px; }
 .freundin-beispiel { margin: 14px 4px 0; padding: 10px 12px; border-radius: 14px; background: #FFF6D6; font-size: 13px; line-height: 1.4; color: #5A4A1A; }
 .freundin-beispiel[hidden] { display: none; }
 .teilen-knoepfe { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }

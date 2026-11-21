@@ -212,8 +212,8 @@ function abhauWarnung() {
 }
 
 const ANTIPP_SAETZE = {
-  gluecklich: ['Miau! 😺', 'Hihi, das kitzelt!', 'Spielst du mit mir? 🧶', 'Mrrp? 🐾'],
-  traurig: ['Miau… 😿', 'Ich hätte so gern Milch', 'Trinkst du mit mir? 💧'],
+  gluecklich: ['Miau! 😺', 'Streichel mich mal! 🐾', 'Hihi, das kitzelt!', 'Spielst du mit mir? 🧶'],
+  traurig: ['Miau… 😿', 'Streichel mich, das tröstet 🐾', 'Trinkst du mit mir? 💧'],
   hungrig: ['Miaaau! 🥺 Milch?', 'Hunger! 🍼'],
   fertig: ['Ich bin gross geworden! 🎉', 'Bringst du mich in den Garten? 🏡'],
   weg: ['Hier sind nur noch Pfotenspuren… 🐾', 'Hol dir ein neues Kätzchen 🍼'],
@@ -296,7 +296,7 @@ function zeigeFlasche() {
   const h = Math.round(58 * Math.min(1, Math.max(0.15, ml / MILCH_MAX_ML)));
   el.flascheMilch.setAttribute('y', -4 - h);
   el.flascheMilch.setAttribute('height', h);
-  el.flascheText.textContent = satt() ? 'satt 😺' : `🍼 ${liter(ml)}`;
+  el.flascheText.textContent = satt() ? 'satt 😺' : `heute ${liter(ml)}`;
   el.flasche.setAttribute('aria-label', `Milchflasche: heute ${liter(ml)} Milch bekommen. Milch gibt es automatisch, wenn du trinkst.`);
 }
 
@@ -1677,6 +1677,7 @@ function zeichneFreundinKarte() {
   freundinUi.zustand.textContent = `${FREUNDIN_SATZ[zustand](fr.katzenName, fr.name)} · 🍼 ${zahl(fr.milch / 1000)}/${bisGross / 1000} l`
     + (fr.stand ? ` · Stand ${standText(fr.stand)}` : '');
   $('#fr-beispiel').hidden = !fr.beispiel;
+  $('.freundin-blatt').classList.toggle('beispiel', !!fr.beispiel);
   zeichneAnstupsKnopf();
 }
 
