@@ -1967,7 +1967,7 @@ function zeigeMeldung(text, mitBild = true) {
 }
 meldungEl.addEventListener('click', () => { meldungEl.hidden = true; });
 
-$('#freundin-knopf').addEventListener('click', oeffneFreundin);
+$('#freundin-knopf').addEventListener('click', () => oeffneFreunde());
 $('#fr-garten-knopf').addEventListener('click', () => {
   freundinUi.huelle.hidden = true;
   oeffneGarten('freundin');
@@ -2384,6 +2384,105 @@ async function geschenkAusLink() {
 }
 window.addEventListener('hashchange', geschenkAusLink);
 
+// ---------- Freunde-Liste: alle, die die App online nutzen ----------
+// Runder Knopf oben rechts → Liste. Antippen → Katze und Garten der Person (nur ansehen).
+
+const freunde = { huelle: $('#freunde'), liste: $('#freunde-liste'), leer: $('#freunde-leer'), timer: null, zurueckFokus: null };
+const GERADE_DA_MS = 5 * 60 * 1000;
+const FREUNDE_NEU_MS = 30 * 1000;
+const GROESSE_PRO_STUFE = [0, 0.4, 0.75, 1];
+
+function vorText(ms) {
+  const min = Math.round((Date.now() - ms) / 60000);
+  if (min < 60) return `zuletzt da: vor ${Math.max(1, min)} Min.`;
+  const std = Math.round(min / 60);
+  if (std < 24) return `zuletzt da: vor ${std} Std.`;
+  const tage = Math.round(std / 24);
+  return `zuletzt da: vor ${tage} ${tage === 1 ? 'Tag' : 'Tagen'}`;
+}
+
+function zeichneFreunde(alle) {
+  const jetztMs = Date.now();
+  const da = (f) => jetztMs - f.aktiv < GERADE_DA_MS;
+  // eigene Person und Personen ohne Namen nicht zeigen; zuerst «gerade da», dann nach letzter Aktivität
+  const liste = alle.filter((f) => f.id !== daten.konto.id && f.name)
+    .sort((a, b) => (da(b) - da(a)) || (b.aktiv - a.aktiv));
+  freunde.leer.hidden = liste.length > 0;
+  freunde.liste.innerHTML = '';
+  for (const f of liste) {
+    const art = artNachId(f.art);
+    const { svg, hoehe } = zeichneKatze({ art, groesse: GROESSE_PRO_STUFE[f.stufe] ?? 0, effekte: false });
+    const zeile = document.createElement('button');
+    zeile.type = 'button';
+    zeile.className = 'freund-zeile';
+    zeile.dataset.id = f.id;
+    const h = Math.max(60, hoehe + 8);
+    zeile.innerHTML = `<svg class="freund-katze" viewBox="${rund(-h * 0.55)} ${rund(-h)} ${rund(h * 1.1)} ${rund(h * 1.05)}" aria-hidden="true">${svg}</svg>
+      <span class="freund-text"><strong></strong><span class="freund-ml"></span><span class="freund-status"></span></span>`;
+    zeile.querySelector('strong').textContent = f.name;
+    zeile.querySelector('.freund-ml').textContent = `💧 heute ${liter(f.heuteMl)} · ${art.name}, ${STUFEN[f.stufe] ?? ''}`;
+    const status = zeile.querySelector('.freund-status');
+    status.textContent = da(f) ? 'gerade da' : vorText(f.aktiv);
+    status.classList.toggle('da', da(f));
+    zeile.setAttribute('aria-label', `${f.name}, heute ${liter(f.heuteMl)}, ${status.textContent}. Katze und Garten ansehen.`);
+    freunde.liste.appendChild(zeile);
+  }
+}
+
+async function ladeFreunde() {
+  try {
+    const { freunde: alle } = await api('freunde');
+    serverDa = true;
+    freunde.leer.querySelector('p').textContent = 'Noch niemand da. Lade jemanden ein!';
+    zeichneFreunde(alle);
+  } catch {
+    freunde.liste.innerHTML = '';
+    freunde.leer.hidden = false;
+    freunde.leer.querySelector('p').textContent = 'Keine Verbindung zum Server 😿 Die Freunde-Liste gibt es auf katzengarten.vercel.app.';
+  }
+}
+
+function oeffneFreunde() {
+  freunde.zurueckFokus = document.activeElement;
+  faecher(false);
+  freunde.huelle.hidden = false;
+  freunde.huelle.querySelector('.schliessen-knopf').focus();
+  hochladen(); // damit ich selbst als «gerade da» gelte
+  ladeFreunde();
+  clearInterval(freunde.timer);
+  freunde.timer = setInterval(ladeFreunde, FREUNDE_NEU_MS); // solange offen: alle 30 s neu
+}
+
+function schliesseFreunde() {
+  if (freunde.huelle.hidden) return;
+  clearInterval(freunde.timer);
+  freunde.huelle.hidden = true;
+  freunde.zurueckFokus?.focus?.();
+}
+
+// Person antippen: ihren Stand holen und wie bei der Kollegin anzeigen (nur ansehen)
+freunde.liste.addEventListener('click', async (e) => {
+  const zeile = e.target.closest('.freund-zeile');
+  if (!zeile) return;
+  try {
+    const fr = pruefeFreundin(await api(`stand?id=${zeile.dataset.id}`));
+    if (!fr) throw new Error('kaputt');
+    daten.freundin = { ...fr, id: zeile.dataset.id };
+    daten.angestupstUm = null;
+    freundinUi.letzteMini = '';
+    speichern();
+    zeichne();
+    clearInterval(freunde.timer);
+    freunde.huelle.hidden = true;
+    oeffneFreundin();
+  } catch {
+    zeigeMeldung('Diese Katze konnte ich gerade nicht laden 😿', false);
+  }
+});
+freunde.huelle.querySelectorAll('[data-schliessen]').forEach((x) => x.addEventListener('click', schliesseFreunde));
+$('#freunde-einladen').addEventListener('click', () => $('#einladen-knopf').click());
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') schliesseFreunde(); });
+
 // ---------- Ton an / aus ----------
 
 function zeigeTonKnopf() {
@@ -2415,7 +2514,7 @@ else oeffneWillkommen(); // ein Katzen-Link wird danach übernommen
 window.addEventListener('hashchange', freundinAusLink); // Link kommt, während die App schon offen ist
 document.fonts?.ready.then(() => { zeigeName(daten.katze.name); if (!blaseTimer) zeigeNormaleBlase(false); });
 // Zustand hängt von der Uhrzeit ab: jede Minute neu prüfen
-setInterval(() => { abrechnen(); zeichne(); abgleichen(); }, 60 * 1000);
+setInterval(() => { abrechnen(); zeichne(); abgleichen(); if (!document.hidden) hochladen(); }, 60 * 1000); // hochladen = «zuletzt da»
 abgleichen();
 hochladen();
 // Beim Zurückkommen in die App (z. B. am Morgen) gleich abrechnen

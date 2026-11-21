@@ -153,7 +153,7 @@
   </header>
 
   <div class="rund-knoepfe">
-    <button class="rund-knopf" id="freundin-knopf" type="button" aria-label="Katze deiner Freundin ansehen">
+    <button class="rund-knopf" id="freundin-knopf" type="button" aria-label="Freunde ansehen">
       <svg id="freundin-mini" viewBox="-58 -120 116 124" aria-hidden="true"></svg>
     </button>
     <button class="rund-knopf ton-knopf" id="ton-knopf" type="button" aria-label="Ton ausschalten">🔊</button>
@@ -282,6 +282,23 @@
       <div class="teilen-knoepfe">
         <button class="zweit-knopf" id="einladen-knopf" type="button">📨 Kollegin einladen</button>
         <button class="zweit-knopf" id="zeigen-knopf" type="button">🐾 Meine Katze schicken</button>
+      </div>
+    </section>
+  </div>
+
+  <!-- ================= FREUNDE-LISTE ================= -->
+  <div class="unterblatt-huelle" id="freunde" hidden>
+    <div class="unterblatt-hintergrund" data-schliessen></div>
+    <section class="unterblatt" role="dialog" aria-modal="true" aria-labelledby="freunde-titel">
+      <div class="griff" aria-hidden="true"></div>
+      <header class="unterblatt-kopf">
+        <h2 id="freunde-titel">🐾 Freunde</h2>
+        <button class="schliessen-knopf" type="button" data-schliessen aria-label="Freunde schliessen">✕</button>
+      </header>
+      <div class="freunde-liste" id="freunde-liste" aria-live="polite"></div>
+      <div class="freunde-leer" id="freunde-leer" hidden>
+        <p>Noch niemand da. Lade jemanden ein!</p>
+        <button class="anstupsen-knopf" id="freunde-einladen" type="button">📨 Einladen</button>
       </div>
     </section>
   </div>

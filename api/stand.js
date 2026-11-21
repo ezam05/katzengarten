@@ -15,10 +15,12 @@ export default async function handler(req, res) {
     if (req.method === 'POST') {
       const { id, geheim, stand } = req.body || {};
       if (!stand || typeof stand !== 'object' || Array.isArray(stand)) return antwort(res, 400, { fehler: 'stand fehlt' });
-      const text = JSON.stringify({ ...stand, i: id });
+      // aktiv: Zeit des Servers (zuletzt da), i: öffentliche Kennung. Die geheime Nummer wird nie gespeichert.
+      const text = JSON.stringify({ ...stand, i: id, aktiv: Date.now() });
       if (text.length > MAX_ZEICHEN) return antwort(res, 413, { fehler: 'zu gross' });
       if (!(await pruefeGeheim(id, geheim, true))) return antwort(res, 403, { fehler: 'falsche Nummer' });
       await befehl('SET', `stand:${id}`, text, 'EX', JAHR_S);
+      await befehl('SADD', 'profile', id); // für die Freunde-Liste
       return antwort(res, 200, { ok: true });
     }
     return antwort(res, 405, { fehler: 'nur GET oder POST' });
