@@ -21,6 +21,18 @@ function audio() {
   } catch { return null; }
 }
 
+// Bei der ersten Berührung aufrufen: schaltet die Töne frei (iPhone, Safari)
+export function tonEntsperren() {
+  const a = audio();
+  if (!a) return;
+  // ein ganz kurzer stiller Ton entsperrt ältere iPhones
+  const b = a.createBuffer(1, 1, 22050);
+  const q = a.createBufferSource();
+  q.buffer = b;
+  q.connect(a.destination);
+  q.start(0);
+}
+
 // Miau: Ton gleitet hoch und wieder runter, durch einen «Mund»-Filter
 export function miau({ hoch = 1, lang = 1 } = {}) {
   const a = audio();

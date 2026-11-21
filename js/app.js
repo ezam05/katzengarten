@@ -2,11 +2,11 @@
 
 import { ARTEN, artNachId, milchBisGross } from './arten.js';
 import { zeichneKatze, zufall, wollknaeuel } from './katze.js';
-import { miau, schnurrenStart, schnurrenStopp, plaetschern, tonAn } from './ton.js';
+import { miau, schnurrenStart, schnurrenStopp, plaetschern, tonAn, tonEntsperren } from './ton.js';
 import {
   STUFEN, ZIEL_ML, stufeFuerMilch, groesseFuerMilch, milchFuerStufe, ZURUECKHOLEN_PREIS, tagesSchluessel, zeitImTag, stundeImTag,
   eintraegeVomTag, summeMl, glaeserBisZiel, katzenZustand, milchPortion,
-  rechneTagAb, offeneTage, verschiebeTag, SCHWELLE_WEG, SCHWELLE_ZWEITER,
+  rechneTagAb, offeneTage, verschiebeTag, SCHWELLE_WEG, SCHWELLE_ZWEITER, MUENZEN_GARTEN, literMuenzen,
 } from './regeln.js';
 
 const KATZE_X = 178;    // Boden-Mitte der Katze in der Szene
@@ -33,6 +33,7 @@ function startDaten() {
     streak: 0,
     vortagMl: null,        // Menge vom letzten abgerechneten Tag (für «zwei Tage unter 1,5 l»)
     gestartet: false,      // Willkommen (Name, erstes Kätzchen) schon gemacht?
+    literBonus: { tag: null, anzahl: 0 }, // Münzen für getrunkene Liter, schon vergeben an diesem Tag
     konto: neuesKonto(),   // öffentliche und geheime Nummer für den Server
     demoSichtbar: false,
     ton: true,             // Miau und Schnurren an   // Demo-Knopf zeigen (geheim: 3× schnell auf das Holzschild tippen)
@@ -513,6 +514,19 @@ $('#balken-knopf').addEventListener('keydown', (e) => {
   if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); wachstumErklaeren(); }
 });
 
+// ---------- Münzen pro Liter ----------
+// Gleicht die Liter-Münzen von heute ab (auch nach «Rückgängig»). Ergebnis: neu dazu (+) oder weg (−).
+function literMuenzenAbgleichen() {
+  const tag = heute();
+  if (daten.literBonus?.tag !== tag) daten.literBonus = { tag, anzahl: 0 };
+  const diff = literMuenzen(heuteMl()) - daten.literBonus.anzahl;
+  if (diff !== 0) {
+    daten.muenzen = Math.max(0, daten.muenzen + diff);
+    daten.literBonus.anzahl += diff;
+  }
+  return diff;
+}
+
 // ---------- Gross: in den Garten ----------
 
 // Art für die nächste Katze (im Laden gewählt, sonst gleiche Art)
@@ -528,12 +542,13 @@ function neueKatze(artId) {
 function inDenGartenBringen() {
   const k = daten.katze;
   daten.garten.push({ artId: k.artId, name: k.name, datum: heute() });
+  daten.muenzen += MUENZEN_GARTEN;
   const name = k.name;
   neueKatze(naechsteArt());
   demo.zustand = null;
   speichern();
   zeichne();
-  kurzeBlase(`${name} wohnt jetzt im Garten! Ich bin ${daten.katze.name} 🍼`, false, 4500);
+  kurzeBlase(`${name} wohnt jetzt im Garten! +${MUENZEN_GARTEN} 🪙 Ich bin ${daten.katze.name} 🍼`, false, 4500);
   if (daten.garten.length === GARTEN_GROSS_AB) zeigeMeldung('🌳 3 Katzen! Dein Katzengarten ist grösser geworden.', false);
 }
 
@@ -1359,7 +1374,7 @@ garten.raster.addEventListener('pointerdown', (e) => {
   gartenWollZug = { wEl, id: e.pointerId, x: e.clientX, y: e.clientY };
   wEl.classList.add('gehoben');
 }, true);
-garten.raster.addEventListener('pointermove', (e) => {
+window.addEventListener('pointermove', (e) => {
   const z = gartenWollZug;
   if (!z || e.pointerId !== z.id) return;
   z.wEl.style.transform = `translate(${e.clientX - z.x}px, ${e.clientY - z.y}px) scale(1.3)`;
@@ -1382,8 +1397,8 @@ function gartenWolleLoslassen(e) {
     z.wEl.style.transform = '';
   }
 }
-garten.raster.addEventListener('pointerup', gartenWolleLoslassen, true);
-garten.raster.addEventListener('pointercancel', gartenWolleLoslassen, true);
+window.addEventListener('pointerup', gartenWolleLoslassen, true);
+window.addEventListener('pointercancel', gartenWolleLoslassen, true);
 
 // Jede neue Berührung im Garten (ausser an einem Knäuel) beendet das Spielen
 garten.seite.addEventListener('pointerdown', (e) => {
@@ -1402,6 +1417,7 @@ function trinken(ml) {
   const vorher = heuteMl();
   const stufeVorher = stufe();
   daten.eintraege.push({ ml, zeit: jetzt() });
+  const literMuenze = literMuenzenAbgleichen();
   const portion = fuettereAutomatisch();
   const gross = daten.katze.status === 'fertig';
   speichern();
@@ -1413,6 +1429,7 @@ function trinken(ml) {
   // Münze und Streak gibt es bei der Abrechnung morgen um 4 Uhr
   const zielSatz = vorher < ZIEL_ML && nachher >= ZIEL_ML ? 'Geschafft! 2 Liter 🎉 Morgen früh gibt es 🪙. ' : '';
   const neueStufe = !gross && stufe() > stufeVorher ? stufe() : null;
+  const muenzSatz = literMuenze > 0 ? `+${literMuenze} 🪙 für ${literMuenzen(nachher)} l! ` : '';
   // nach dem Platzen der Tropfen-Blase: Milch giessen (oder nur eine Sprechblase).
   // Eigener Zeitgeber, damit Antippen oder ein weiteres Getränk die Milch nicht verschluckt.
   el.blase.innerHTML = '';
@@ -1428,14 +1445,14 @@ function trinken(ml) {
           miau({ hoch: 1.1, lang: 1.2 });
           kurzeBlase(`Ich bin jetzt ${neueStufe === 1 ? 'ein Kätzchen' : 'eine junge Katze'}! 🎉`, false, 4500);
           setTimeout(() => { letzteZeichnung = ''; zeichne(); }, 4600); // Konfetti wieder weg
-        } else kurzeBlase(`${zielSatz}Mmh, Milch! +${dl(portion)} 😋`, false, 3200);
+        } else kurzeBlase(`${zielSatz || muenzSatz}Mmh, Milch! +${dl(portion)} 😋`, false, 3200);
       });
     } else {
       fuettertGerade = false; // falls ein vorheriges Getränk noch wartete
       letzteZeichnung = '';
       zeichne();
       starteAnimation('huepfen');
-      if (zielSatz) kurzeBlase(zielSatz, false, 3500);
+      if (zielSatz || muenzSatz) kurzeBlase(zielSatz || muenzSatz, false, 3500);
       else kurzeBlase('Danke! 💧');
     }
   }, 1300);
@@ -1462,6 +1479,7 @@ function rueckgaengig() {
       if (f.ml <= 0) daten.fuetterungen.splice(j, 1);
     }
     if (daten.katze.status === 'fertig' && daten.katze.milch < milchBisGross(katzenArt())) daten.katze.status = 'waechst';
+    literMuenzenAbgleichen(); // Liter-Münze zurück, wenn ein Liter wegfällt
     speichern();
     clearTimeout(blaseTimer);
     blaseTimer = null;
@@ -2150,6 +2168,7 @@ $('#schild').addEventListener('click', () => {
 
 let serverDa = null; // null = noch nicht geprüft, true / false
 var hochladenTimer = null;
+var serverFehlerUm = 0; // nach einem Fehler 1 Minute warten, dann wieder versuchen
 
 async function api(pfad, optionen = {}) {
   const r = await fetch(`api/${pfad}`, { ...optionen, headers: { 'Content-Type': 'application/json' } });
@@ -2167,26 +2186,32 @@ function standInhalt(name) {
 }
 
 function spaeterHochladen() {
-  if (serverDa === false) return;
+  if (serverDa === false && Date.now() - serverFehlerUm < 60 * 1000) return;
   clearTimeout(hochladenTimer);
   hochladenTimer = setTimeout(hochladen, 1500);
 }
 
 async function hochladen() {
+  clearTimeout(hochladenTimer);
+  hochladenTimer = null;
   try {
-    await api('stand', { method: 'POST', body: JSON.stringify({ id: daten.konto.id, geheim: daten.konto.geheim, stand: standInhalt(daten.name || '') }) });
+    // keepalive: klappt auch, wenn die App gerade geschlossen wird
+    await api('stand', { method: 'POST', keepalive: true, body: JSON.stringify({ id: daten.konto.id, geheim: daten.konto.geheim, stand: standInhalt(daten.name || '') }) });
     serverDa = true;
-  } catch { serverDa = false; }
+  } catch { serverDa = false; serverFehlerUm = Date.now(); }
 }
 
 // Wasser von der Uhr abholen und die Katze der Freundin neu laden
 async function abgleichen() {
   try {
     const { liste } = await api('trinken', { method: 'POST', body: JSON.stringify({ id: daten.konto.id, geheim: daten.konto.geheim, aktion: 'abholen' }) });
+    const warWeg = serverDa === false;
     serverDa = true;
+    if (warWeg) spaeterHochladen(); // Server ist wieder da: Stand nachliefern
     if (liste?.length) {
       spielenEnde(); // Neues von der Uhr
       for (const e of liste) daten.eintraege.push({ ml: e.ml, zeit: Math.min(e.zeit, Date.now()) });
+      literMuenzenAbgleichen();
       const portion = fuettereAutomatisch();
       speichern();
       letzteZeichnung = '';
@@ -2255,7 +2280,8 @@ wolle.el.addEventListener('pointerdown', (e) => {
   wolle.zug = { id: e.pointerId };
   wolle.el.classList.add('gehoben');
 });
-wolle.el.addEventListener('pointermove', (e) => {
+// Bewegen und Loslassen am ganzen Fenster abhören: klappt auch, wenn der Finger den Knäuel «verliert»
+window.addEventListener('pointermove', (e) => {
   if (!wolle.zug || e.pointerId !== wolle.zug.id) return;
   const p = szenePunkt(e.clientX, e.clientY);
   setzeWolle(p.x, p.y);
@@ -2271,8 +2297,8 @@ function wolleLoslassen(e, abbrechen) {
   if (trifft) spielenStart();
   else setzeWolle(WOLLE_X, WOLLE_Y);
 }
-wolle.el.addEventListener('pointerup', (e) => wolleLoslassen(e, false));
-wolle.el.addEventListener('pointercancel', (e) => wolleLoslassen(e, true));
+window.addEventListener('pointerup', (e) => wolleLoslassen(e, false));
+window.addEventListener('pointercancel', (e) => wolleLoslassen(e, true));
 // Tastatur: Enter auf dem Knäuel = der Katze zuwerfen
 wolle.el.addEventListener('keydown', (e) => {
   if ((e.key === 'Enter' || e.key === ' ') && daten.katze.status !== 'weg') { e.preventDefault(); spielenStart(); }
@@ -2305,6 +2331,9 @@ abrechnen();
 zeichne();
 zeigeDemoKnopf();
 zeigeTonKnopf();
+// iPhone: Töne erst nach einer Berührung erlaubt, darum bei der ersten Berührung freischalten
+document.addEventListener('pointerdown', tonEntsperren, { once: true, capture: true });
+document.addEventListener('touchstart', tonEntsperren, { once: true, capture: true, passive: true });
 if (daten.gestartet) freundinAusLink();
 else oeffneWillkommen(); // ein Katzen-Link wird danach übernommen
 window.addEventListener('hashchange', freundinAusLink); // Link kommt, während die App schon offen ist
@@ -2316,4 +2345,5 @@ hochladen();
 // Beim Zurückkommen in die App (z. B. am Morgen) gleich abrechnen
 document.addEventListener('visibilitychange', () => {
   if (!document.hidden) { abrechnen(); zeichne(); abgleichen(); }
+  else if (hochladenTimer) hochladen(); // App geht zu: letzte Änderung sofort hochladen
 });

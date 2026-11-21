@@ -8,6 +8,9 @@ export const PLAN_ENDE = 22;   // Uhr
 export const TAGESWECHSEL = 4; // Uhr: Hier endet ein Tag
 export const HUNGER_NACH_MS = 5 * 60 * 60 * 1000; // 5 Stunden
 export const FROH_NACH_TRINKEN_MS = 45 * 60 * 1000; // nach einem Getränk ist die Katze 45 Minuten zufrieden
+export const MUENZEN_GARTEN = 2;      // Münzen, wenn eine grosse Katze in den Garten zieht
+// 1 Münze pro getrunkenem Liter (zusätzlich zur Münze für einen Tag mit 2 l)
+export const literMuenzen = (ml) => Math.floor(Math.max(0, ml) / 1000);
 export const ZURUECKHOLEN_PREIS = 4; // so viele Münzen kostet es, eine abgehauene Katze zurückzuholen
 
 // Die Katze wächst in Stufen: Baby → Kätzchen (ab ⅓ der Milch) → junge Katze (ab ⅔) → gross
