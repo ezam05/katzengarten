@@ -2342,6 +2342,32 @@ document.addEventListener('pointerdown', (e) => {
   if (spielt && Date.now() - spielBeginn > 400 && !wolle.el.contains(e.target)) spielenEnde();
 }, true);
 
+// ---------- Geschenk-Link: #geschenk=<geheimer Code> gibt einmalig Münzen ----------
+// Hier steht nur die Prüfsumme (SHA-256) des Codes, der Code selbst ist geheim.
+const GESCHENKE = {
+  ea1692885ac742476a3f9eec9b14899daefb4a9ff34da63291c06547c3e1c7a6: 30, // 2026-11-21 für Elyna
+};
+
+async function geschenkAusLink() {
+  const treffer = location.hash.match(/^#geschenk=([A-Za-z0-9_-]{8,64})$/);
+  if (!treffer) return;
+  history.replaceState(null, '', location.pathname + location.search);
+  try {
+    const roh = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(treffer[1]));
+    const summe = [...new Uint8Array(roh)].map((b) => b.toString(16).padStart(2, '0')).join('');
+    const anzahl = GESCHENKE[summe];
+    daten.geschenke ||= [];
+    if (!anzahl) { zeigeMeldung('Dieser Geschenk-Link gilt nicht 😿', false); return; }
+    if (daten.geschenke.includes(summe)) { zeigeMeldung('Dieses Geschenk hast du schon bekommen 🎁', false); return; }
+    daten.geschenke.push(summe);
+    daten.muenzen += anzahl;
+    speichern();
+    zeichne();
+    zeigeMeldung(`🎁 Geschenk: +${anzahl} 🪙`, false);
+  } catch { /* ohne Prüfsumme (sehr alter Browser): nichts tun */ }
+}
+window.addEventListener('hashchange', geschenkAusLink);
+
 // ---------- Ton an / aus ----------
 
 function zeigeTonKnopf() {
@@ -2364,6 +2390,7 @@ abrechnen();
 zeichne();
 zeigeDemoKnopf();
 zeigeTonKnopf();
+geschenkAusLink();
 // iPhone: Töne erst nach einer Berührung erlaubt, darum bei der ersten Berührung freischalten
 document.addEventListener('pointerdown', tonEntsperren, { once: true, capture: true });
 document.addEventListener('touchstart', tonEntsperren, { once: true, capture: true, passive: true });
