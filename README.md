@@ -23,7 +23,8 @@ Regeln prüfen: `node tests/regeln.test.mjs`
 - **Erster Start:** Kurze Erklärung, eigener Name, erstes Kätzchen aus 3 wählen (Toast-, Tiger- oder Glückskatze, gratis) und benennen.
 - **Gross:** Konfetti, Knopf «In den Katzengarten bringen». Danach kommt ein neues Baby (im Laden gewählte Art, sonst die gleiche).
 - **Wollknäuel:** Neben jeder Katze liegt ein Wollknäuel (Startseite und Garten). Zieht man ihn auf die Katze, legt sie sich auf den Rücken und spielt damit (Haltung «spielen» in `katze.js`). Sie spielt, bis etwas Neues passiert (Getränk, Wasser von der Uhr, neuer Tag) oder man wieder etwas antippt. Vorlagen: 4 Bilder spielender Katzen (lokal, nicht veröffentlicht).
-- **Foto-Katze «Tanzkätzchen»:** Elynas zwei Bilder, weisser Hintergrund im Browser entfernt (nur Weiss, das mit dem Rand verbunden ist, damit weisses Fell bleibt). Die Drehkatze ist ein Streifen aus 30 Einzelbildern (`bilder/katzen/drehkatze-bilder.png`), der mit CSS durchläuft. Soundeffekt der Drehkatze: `ton/drehkatze.mp3` (Elynas Datei «oiia-oiia-sound.mp3»), es laufen die ersten 3 Sekunden, dann wird ausgeblendet. Mit 🔇 ist er stumm.
+- **Foto-Katze «UU II AA»:** tanzt ständig (alle 53 Bilder der GIF von Tenor). Elynas Bilder, weisser Hintergrund im Browser entfernt (nur Weiss, das mit dem Rand verbunden ist, damit weisses Fell bleibt). Die Drehkatze ist ein Streifen aus 30 Einzelbildern (`bilder/katzen/drehkatze-bilder.png`), der mit CSS durchläuft. Soundeffekt der Drehkatze: `ton/drehkatze.mp3` (Elynas Datei «oiia-oiia-sound.mp3»), es laufen die ersten 3 Sekunden, dann wird ausgeblendet. Mit 🔇 ist er stumm.
+- **Geschenk-Link:** `…/#geschenk=<geheimer Code>` gibt einmalig Münzen. Im Code steht nur die Prüfsumme des Codes (`GESCHENKE` in `js/app.js`).
 - **Töne:** Miau beim Antippen, Schnurren beim Streicheln, Plätschern bei der Milch. Im Browser erzeugt (`js/ton.js`, keine Tondateien). Knopf 🔊/🔇 rechts oben. Auf dem iPhone stumm, wenn der Lautlos-Schalter an ist.
 - **Antippen:** Katze federt und miaut. **Streicheln** (mit dem Finger darüber fahren): Augen zu, schnurren, Herzen.
 - **Katzengarten:** schwebende Insel in Isometrie. **Ab 3 Katzen** wird die Insel grösser (7 × 7 Felder, mehr Kissen und Bäume, breiter als der Bildschirm, mit dem Finger wischen), ab 7 Katzen kommt alle 3 Katzen eine Reihe dazu. Die Katzen schlendern herum, sitzen, schlafen (am liebsten auf den rosa Kissen). Antippen = Miau und Name, streicheln = schnurren, lange drücken und ziehen = Katze woanders hinsetzen.
@@ -44,7 +45,7 @@ Vorlagen: `bilder/vorlagen/katzen/`. Die Figuren sind in `js/katze.js` selbst ge
 | Glückskatze (dreifarbig, Glöckchen) | 14 | glueckskatze.png |
 | Wolkenkatze (Langhaar, blaue Augen) | 21 | wolkenkatze.png |
 | Kleiner Tiger (orange, «王» auf der Stirn) | 30 | Tiger-Bilder vom 2026-11-21 |
-| Tanzkätzchen (Foto, Hintergrund entfernt); 3× schnell antippen → zweite Katze dreht sich 3 s lang, 3× schneller als das Original | 20 | tanzkatze-original.webp, drehkatze-original.gif |
+| UU II AA (tanzende Foto-Katze, ganze GIF); 3× schnell antippen → zweite Katze dreht sich 3 s lang, 3× schneller als das Original | 20 | tanzkatze-tenor.gif, drehkatze-original.gif |
 
 Jede Katze hat den Stil ihrer Vorlage: Glückskatze dicke schwarze Linie mit Lücken und sehr grossen Augen, Wolkenkatze steht auf 4 Beinen mit Flauschkanten und Wolkenschwanz, Tigerkatze als Bohne mit Tusche-Linie und Aquarell, Toastkatze mit dünner Linie, Brot mit Poren und Lachmund.
 

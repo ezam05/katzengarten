@@ -481,10 +481,10 @@ function fotoKatze({ art, groesse, zustand, pose, effekte, zweite, feiern }) {
   const B = H * foto.breite / foto.hoehe;
   const x = -B / 2, y = -H * foto.boden;
   let bild;
-  if (zweite && art.figur.foto2) {
-    const f2 = art.figur.foto2;
-    bild = `<svg x="${r1(x)}" y="${r1(y)}" width="${r1(B)}" height="${r1(H)}" viewBox="0 0 ${f2.breite} ${f2.hoehe}" overflow="hidden">
-      <image class="k-sprite" href="${f2.bild}" width="${f2.breite * f2.bilder}" height="${f2.hoehe}" style="--sprite-weg:${-f2.breite * f2.bilder}px;--sprite-bilder:${f2.bilder};animation-duration:${f2.ms}ms"/></svg>`;
+  if (foto.bilder) {
+    // Einzelbilder nebeneinander: mit CSS Bild für Bild durchschieben
+    bild = `<svg x="${r1(x)}" y="${r1(y)}" width="${r1(B)}" height="${r1(H)}" viewBox="0 0 ${foto.breite} ${foto.hoehe}" overflow="hidden">
+      <image class="k-sprite" href="${foto.bild}" width="${foto.breite * foto.bilder}" height="${foto.hoehe}" style="--sprite-weg:${-foto.breite * foto.bilder}px;--sprite-bilder:${foto.bilder};animation-duration:${foto.ms}ms"/></svg>`;
   } else {
     bild = `<image href="${foto.bild}" x="${r1(x)}" y="${r1(y)}" width="${r1(B)}" height="${r1(H)}"/>`;
   }

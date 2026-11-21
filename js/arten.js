@@ -79,14 +79,15 @@ export const ARTEN = [
   },
 ];
 
-// Foto-Katze (Elynas Bilder, Hintergrund entfernt). 3× schnell antippen: die zweite Katze dreht sich.
+// Foto-Katze «UU II AA» (Elynas GIFs, Hintergrund entfernt). 3× schnell antippen: die zweite Katze dreht sich.
 ARTEN.push({
-  id: 'tanzkatze', name: 'Tanzkätzchen', tage: 20, preis: 20,
+  id: 'tanzkatze', name: 'UU II AA', tage: 20, preis: 20,
   satz: 'Tanzt den ganzen Tag. Tipp 3× schnell drauf!',
   farben: { fell: '#B9AFA6', fellDunkel: '#8E847C', bauch: '#FFFFFF', streifen: '#6F6A66', umriss: '#3A3330', ohrInnen: '#F2B8B0', nase: '#E9A7B0', auge: '#1F1A18', wange: '#FFB0A8' },
   figur: {
     strich: 2.6,
-    foto: { bild: 'bilder/katzen/tanzkatze.png', breite: 240, hoehe: 240, boden: 0.87 },
+    // tanzt immer: alle 53 Bilder der GIF nebeneinander, ein Durchgang dauert 4,4 s
+    foto: { bild: 'bilder/katzen/tanzkatze-bilder.png', breite: 200, hoehe: 200, bilder: 53, ms: 4380, boden: 1 },
     // zweite Katze: 30 Einzelbilder nebeneinander. ms = eine Drehung (3× schneller als das Original),
     // dauer = so lange bleibt sie, danach wieder das Tanzkätzchen. ton = Soundeffekt (Datei), kommt noch.
     foto2: { bild: 'bilder/katzen/drehkatze-bilder.png', breite: 200, hoehe: 200, bilder: 30, ms: 1700, dauer: 3000, boden: 0.9, ton: 'ton/drehkatze.mp3' },
