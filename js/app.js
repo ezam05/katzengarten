@@ -1,7 +1,7 @@
 // app.js – Ablauf, Knöpfe, Speichern der Daten, Demo-Leiste.
 
 import { ARTEN, artNachId, milchBisGross } from './arten.js';
-import { zeichneKatze, zufall } from './katze.js';
+import { zeichneKatze, zufall, wollknaeuel } from './katze.js';
 import { miau, schnurrenStart, schnurrenStopp, plaetschern, tonAn } from './ton.js';
 import {
   STUFEN, ZIEL_ML, stufeFuerMilch, groesseFuerMilch, milchFuerStufe, ZURUECKHOLEN_PREIS, tagesSchluessel, zeitImTag, stundeImTag,
@@ -329,13 +329,16 @@ function zeichne() {
 
   // Katze nur neu zeichnen, wenn sich etwas geändert hat (sonst ruckelt die Animation)
   const feiern = Date.now() < feierBis;
-  const schluessel = [art.id, bild, g, feiern].join('|');
+  // Spielen nur, solange die Katze da ist (weg/gross beendet es)
+  if (spielt && (daten.katze.status === 'weg' || zustand === 'fertig')) { spielt = false; wolle.el.style.display = ''; setzeWolle(WOLLE_X, WOLLE_Y); }
+  const pose = spielt ? 'spielen' : 'sitzen';
+  const schluessel = [art.id, bild, g, feiern, pose].join('|');
   if (schluessel !== letzteZeichnung && !fuettertGerade) {
     if (zustand === 'weg') {
       el.huelle.innerHTML = wegBild(daten.katze.name);
       katzenHoehe = 128;
     } else {
-      const { svg, hoehe } = zeichneKatze({ art, groesse: g, zustand: bild, feiern });
+      const { svg, hoehe } = zeichneKatze({ art, groesse: g, zustand: bild, feiern, pose });
       el.huelle.innerHTML = svg;
       katzenHoehe = hoehe;
     }
@@ -406,6 +409,7 @@ function abrechnen() {
   }
   const offen = offeneTage(daten.abgerechnetBis, tag);
   if (!offen.length) return;
+  spielenEnde(); // ein neuer Tag beginnt
 
   const verlauf = [];
   for (const tagSchluessel of offen) {
@@ -984,7 +988,7 @@ function zeichneGarten() {
     : `${frName} hat noch keine Katze im Garten 🐾`;
   garten.leer.hidden = liste.length > 0;
   $('#garten-tipp').textContent = eigener
-    ? 'Tipp: Katzen antippen oder streicheln. Lange drücken und ziehen trägt sie woanders hin.'
+    ? 'Tipp: Katzen antippen oder streicheln. Wollknäuel auf eine Katze ziehen, dann spielt sie. Lange drücken und ziehen trägt eine Katze woanders hin.'
     : `Das ist der Garten von ${frName}. Antippen oder streicheln geht auch hier.`;
   garten.seite.classList.toggle('fremd', !eigener);
   garten.raster.innerHTML = '';
@@ -1022,6 +1026,7 @@ function zeichneGarten() {
     garten.katzen.push(katze);
     setzeAufFeld(katze, katze.feld);
     setzePose(katze, Math.random() < 0.3 ? 'schlafen' : 'sitzen');
+    neueGartenWolle(katze);
   });
 }
 
@@ -1077,7 +1082,7 @@ function plane(katze, ms) {
 }
 
 function takt(katze) {
-  if (!garten.offen || katze.gehalten) return;
+  if (!garten.offen || katze.gehalten || katze.spielt) return;
   if (katze.pose === 'schlafen') { // aufwachen und kurz sitzen
     setzePose(katze, 'sitzen');
     plane(katze, 1500 + Math.random() * 2500);
@@ -1302,6 +1307,90 @@ function schliesseGarten() {
   garten.zurueckFokus?.focus?.();
 }
 
+// ---- Wollknäuel im Garten: neben jeder Katze einer, auf eine Katze ziehen = sie spielt ----
+
+const WOLLE_BOX = [-9, -9, 18, 18];
+
+function legeWolle(wEl, feld) {
+  legeAuf(wEl, feld.x + 22, feld.y + 4, WOLLE_BOX);
+  wEl.style.zIndex = tiefe(feld) + 1;
+  wEl.style.transform = '';
+  wEl.hidden = false;
+}
+
+function neueGartenWolle(katze) {
+  const w = document.createElement('div');
+  w.className = 'g-wolle';
+  w.setAttribute('aria-hidden', 'true');
+  w.innerHTML = `<svg viewBox="${WOLLE_BOX.join(' ')}"><g transform="scale(.5)">${wollknaeuel(13)}</g></svg>`;
+  garten.raster.appendChild(w);
+  katze.wolle = w;
+  legeWolle(w, katze.feld);
+}
+
+function gartenSpielen(katze, wEl) {
+  if (katze.spielt) return;
+  katze.spielt = true;
+  katze.spielSeit = Date.now();
+  katze.wolle = wEl; // dieser Knäuel gehört jetzt zu ihr
+  wEl.hidden = true;
+  clearTimeout(katze.timer);
+  katze.el.classList.remove('laeuft');
+  setzePose(katze, 'spielen');
+  gartenBlase(katze, 'Wolle! 🧶');
+  miau({ hoch: 1.1 });
+  el.ansage.textContent = `${katze.eintrag.name} spielt mit dem Wollknäuel.`;
+}
+
+function gartenSpielenEnde(katze) {
+  if (!katze.spielt) return;
+  katze.spielt = false;
+  setzePose(katze, 'sitzen');
+  legeWolle(katze.wolle, katze.feld);
+  plane(katze, 2500 + Math.random() * 2000);
+}
+
+let gartenWollZug = null;
+garten.raster.addEventListener('pointerdown', (e) => {
+  const wEl = e.target.closest('.g-wolle');
+  if (!wEl) return;
+  e.stopPropagation();
+  try { wEl.setPointerCapture(e.pointerId); } catch { /* ältere Browser */ }
+  gartenWollZug = { wEl, id: e.pointerId, x: e.clientX, y: e.clientY };
+  wEl.classList.add('gehoben');
+}, true);
+garten.raster.addEventListener('pointermove', (e) => {
+  const z = gartenWollZug;
+  if (!z || e.pointerId !== z.id) return;
+  z.wEl.style.transform = `translate(${e.clientX - z.x}px, ${e.clientY - z.y}px) scale(1.3)`;
+});
+function gartenWolleLoslassen(e) {
+  const z = gartenWollZug;
+  if (!z || e.pointerId !== z.id) return;
+  gartenWollZug = null;
+  z.wEl.classList.remove('gehoben');
+  // Welche Katze liegt unter dem Finger?
+  const ziel = garten.katzen.find((k) => {
+    const r = k.el.getBoundingClientRect();
+    return e.clientX > r.left && e.clientX < r.right && e.clientY > r.top && e.clientY < r.bottom;
+  });
+  if (ziel && !ziel.spielt && !ziel.gehalten) {
+    // der eigene Knäuel der Zielkatze bleibt liegen, wenn sie einen anderen bekommt
+    if (ziel.wolle && ziel.wolle !== z.wEl) ziel.wolle.hidden = false;
+    gartenSpielen(ziel, z.wEl);
+  } else {
+    z.wEl.style.transform = '';
+  }
+}
+garten.raster.addEventListener('pointerup', gartenWolleLoslassen, true);
+garten.raster.addEventListener('pointercancel', gartenWolleLoslassen, true);
+
+// Jede neue Berührung im Garten (ausser an einem Knäuel) beendet das Spielen
+garten.seite.addEventListener('pointerdown', (e) => {
+  if (e.target.closest('.g-wolle')) return;
+  garten.katzen.filter((k) => k.spielt && Date.now() - (k.spielSeit || 0) > 300).forEach(gartenSpielenEnde);
+}, true);
+
 $('#leiste-garten').addEventListener('click', () => oeffneGarten('ich'));
 $('#garten-zurueck').addEventListener('click', schliesseGarten);
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape') schliesseGarten(); });
@@ -1309,6 +1398,7 @@ document.addEventListener('keydown', (e) => { if (e.key === 'Escape') schliesseG
 // ---------- Trinken ----------
 
 function trinken(ml) {
+  spielenEnde();
   const vorher = heuteMl();
   const stufeVorher = stufe();
   daten.eintraege.push({ ml, zeit: jetzt() });
@@ -2095,6 +2185,7 @@ async function abgleichen() {
     const { liste } = await api('trinken', { method: 'POST', body: JSON.stringify({ id: daten.konto.id, geheim: daten.konto.geheim, aktion: 'abholen' }) });
     serverDa = true;
     if (liste?.length) {
+      spielenEnde(); // Neues von der Uhr
       for (const e of liste) daten.eintraege.push({ ml: e.ml, zeit: Math.min(e.zeit, Date.now()) });
       const portion = fuettereAutomatisch();
       speichern();
@@ -2119,6 +2210,78 @@ async function abgleichen() {
     }
   } catch { /* Freundin noch nicht auf dem Server */ }
 }
+
+// ---------- Wollknäuel: auf die Katze ziehen → sie spielt ----------
+// Sie spielt so lange, bis etwas Neues passiert (Getränk, Abrechnung) oder man wieder etwas antippt.
+
+const WOLLE_X = 112, WOLLE_Y = 696; // Platz neben der Katze
+let spielt = false;
+let spielBeginn = 0;
+const wolle = { el: $('#wolle'), zug: null };
+wolle.el.innerHTML = `<g class="wolle-knaeuel">${wollknaeuel(13)}</g>`;
+
+function setzeWolle(x, y) { wolle.el.setAttribute('transform', `translate(${rund(x)} ${rund(y)})`); }
+setzeWolle(WOLLE_X, WOLLE_Y);
+
+function szenePunkt(clientX, clientY) {
+  return new DOMPoint(clientX, clientY).matrixTransform(el.szene.getScreenCTM().inverse());
+}
+
+function spielenStart() {
+  spielt = true;
+  spielBeginn = Date.now();
+  wolle.el.style.display = 'none';
+  streichelt = false;
+  letzteZeichnung = '';
+  zeichne();
+  miau({ hoch: 1.15 });
+  kurzeBlase('Juhu, Wolle! 🧶', false, 2500);
+  el.ansage.textContent = `${daten.katze.name} spielt mit dem Wollknäuel.`;
+}
+
+function spielenEnde() {
+  if (!spielt) return;
+  spielt = false;
+  wolle.el.style.display = '';
+  setzeWolle(WOLLE_X, WOLLE_Y);
+  letzteZeichnung = '';
+  zeichne();
+}
+
+wolle.el.addEventListener('pointerdown', (e) => {
+  if (daten.katze.status === 'weg') { kurzeBlase('Niemand da zum Spielen… 😿'); return; }
+  e.stopPropagation();
+  try { wolle.el.setPointerCapture(e.pointerId); } catch { /* ältere Browser */ }
+  wolle.zug = { id: e.pointerId };
+  wolle.el.classList.add('gehoben');
+});
+wolle.el.addEventListener('pointermove', (e) => {
+  if (!wolle.zug || e.pointerId !== wolle.zug.id) return;
+  const p = szenePunkt(e.clientX, e.clientY);
+  setzeWolle(p.x, p.y);
+});
+function wolleLoslassen(e, abbrechen) {
+  if (!wolle.zug || e.pointerId !== wolle.zug.id) return;
+  wolle.zug = null;
+  wolle.el.classList.remove('gehoben');
+  const p = szenePunkt(e.clientX, e.clientY);
+  // Auf die Katze gezogen? (Bereich über ihrem Boden-Punkt)
+  const h = Math.max(60, katzenHoehe * KATZE_MASS);
+  const trifft = !abbrechen && Math.abs(p.x - KATZE_X) < 70 && p.y < KATZE_Y + 15 && p.y > KATZE_Y - h - 20;
+  if (trifft) spielenStart();
+  else setzeWolle(WOLLE_X, WOLLE_Y);
+}
+wolle.el.addEventListener('pointerup', (e) => wolleLoslassen(e, false));
+wolle.el.addEventListener('pointercancel', (e) => wolleLoslassen(e, true));
+// Tastatur: Enter auf dem Knäuel = der Katze zuwerfen
+wolle.el.addEventListener('keydown', (e) => {
+  if ((e.key === 'Enter' || e.key === ' ') && daten.katze.status !== 'weg') { e.preventDefault(); spielenStart(); }
+});
+
+// Jede neue Berührung irgendwo beendet das Spielen (kurz nach dem Loslassen noch nicht)
+document.addEventListener('pointerdown', (e) => {
+  if (spielt && Date.now() - spielBeginn > 400 && !wolle.el.contains(e.target)) spielenEnde();
+}, true);
 
 // ---------- Ton an / aus ----------
 

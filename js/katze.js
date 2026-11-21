@@ -7,11 +7,11 @@
 // unter der Katze, die Katze steht nach oben (negative y-Werte).
 //
 // Zustände: 'gluecklich' | 'traurig' | 'hungrig' | 'fertig' | 'gestreichelt' | 'schlafen'
-// Haltungen: 'sitzen' | 'laufen' (von der Seite, Blick nach rechts) | 'schlafen'
+// Haltungen: 'sitzen' | 'laufen' (von der Seite, Blick nach rechts) | 'schlafen' | 'spielen' (auf dem Rücken mit Wollknäuel)
 // «sitzen» heisst bei der Wolkenkatze «stehen auf 4 Beinen» und bei der Tigerkatze «Bohne».
 //
 // Bewegliche Teile haben eigene Klassen (Animation in style.css):
-//   k-atmen (ganze Katze), k-schwanz, k-ohr, k-blinzeln, k-zzz, k-bein-a / k-bein-b (laufen)
+//   k-atmen (ganze Katze), k-schwanz, k-ohr, k-blinzeln, k-zzz, k-bein-a / k-bein-b (laufen, spielen), k-wolle
 
 let zaehler = 0; // damit jede Zeichnung eigene Namen für Ausschnitte und Filter hat
 const r1 = (z) => Math.round(z * 10) / 10;
@@ -356,6 +356,7 @@ function ausschnitte(art, id) {
   let s = `<clipPath id="${id}-kopf"><path d="${kopfForm}"/></clipPath>
     <clipPath id="${id}-koerper"><path d="${KOERPER}"/></clipPath>
     <clipPath id="${id}-liegen"><ellipse cx="6" cy="-24" rx="46" ry="25"/></clipPath>
+    <clipPath id="${id}-spielen"><ellipse cx="0" cy="-22" rx="42" ry="20"/></clipPath>
     <clipPath id="${id}-laufen"><ellipse cx="2" cy="-34" rx="40" ry="${fig.mollig ? 25 : 21}"/></clipPath>`;
   if (fig.form === 'bohne') s += `<clipPath id="${id}-bohne"><path d="${BOHNE}"/></clipPath>`;
   if (fig.form === 'stehend') s += `<clipPath id="${id}-rumpf"><ellipse cx="0" cy="-44" rx="40" ry="25"/></clipPath>`;
@@ -427,6 +428,47 @@ function figurBohne(art, f, zustand, k, id) {
       <path d="M-19 -1 Q -12 -6 -5 -1 M5 -1 Q 12 -6 19 -1" stroke="${f.umriss}" stroke-width="${r1(sw * 0.8)}" fill="none" stroke-linecap="round"/></g>
     <g transform="translate(2 -98) scale(${r1(fs * 100) / 100}) translate(0 90)">${gesicht(art, f, zustand, k, id)}</g>`;
   return { figur, hoeheEinheiten: 155 };
+}
+
+// Wollknäuel (auch einzeln für die App: Mitte = Mitte des Knäuels)
+export function wollknaeuel(r = 17, farbe = '#EF5B6E') {
+  return `<circle r="${r}" fill="${farbe}" stroke="#7A2333" stroke-width="2"/>
+    <path d="M${-r * 0.8} ${-r * 0.3} C ${-r * 0.2} ${-r * 0.9} ${r * 0.5} ${-r * 0.7} ${r * 0.85} ${-r * 0.1} M${-r * 0.85} ${r * 0.15} C ${-r * 0.2} ${-r * 0.4} ${r * 0.5} ${-r * 0.15} ${r * 0.8} ${r * 0.45} M${-r * 0.55} ${r * 0.65} C ${-r * 0.1} ${r * 0.2} ${r * 0.35} ${r * 0.35} ${r * 0.45} ${r * 0.8} M${-r * 0.2} ${-r * 0.95} C ${-r * 0.6} ${-r * 0.3} ${-r * 0.5} ${r * 0.4} ${-r * 0.1} ${r * 0.95}"
+      stroke="#FFC7CF" stroke-width="${r > 12 ? 2 : 1.4}" fill="none" stroke-linecap="round"/>
+    <path d="M${r * 0.7} ${r * 0.7} C ${r * 1.3} ${r * 1.1} ${r * 1.6} ${r * 0.6} ${r * 2.2} ${r * 1.0}" stroke="${farbe}" stroke-width="2" fill="none" stroke-linecap="round"/>`;
+}
+
+// Auf dem Rücken liegen und mit dem Wollknäuel spielen (Vorlagen: raw/quellen/katzengarten-inspiration/wolle/)
+function spielend(art, f, zustand, k, id) {
+  const sw = art.figur.strich;
+  const L = linie(art, f);
+  const pfote = f.pfote || f.bauch;
+  const bein = (x, winkel, klasse, laenge = 26) => `<g transform="translate(${x} -34) rotate(${winkel})"><g class="${klasse}">
+    <rect x="-5.5" y="${-laenge}" width="11" height="${laenge + 4}" rx="5.5" fill="${f.fell}" ${linie(art, f, 0.85)}/>
+    <ellipse cx="0" cy="${-laenge}" rx="6.5" ry="5.5" fill="${pfote}" ${linie(art, f, 0.7)}/></g></g>`;
+  let bauch = `<ellipse cx="0" cy="-22" rx="42" ry="20" fill="${f.fell}"/><g clip-path="url(#${id}-spielen)">
+    <ellipse cx="2" cy="-34" rx="30" ry="11" fill="${f.bauch}"/>`;
+  if (art.figur.muster === 'tiger') bauch += `<path d="M-26 -8 l3 -9 M-12 -4 l1 -10 M4 -4 l0 -10 M18 -6 l-2 -9" stroke="${f.streifen}" stroke-width="4.5" stroke-linecap="round"/>`;
+  if (art.figur.muster === 'dreifarbig') bauch += `<ellipse cx="-22" cy="-14" rx="16" ry="10" fill="${f.fleckA}"/><ellipse cx="22" cy="-10" rx="12" ry="9" fill="${f.fleckB}"/>`;
+  if (art.figur.muster === 'stirn') bauch += `<ellipse cx="6" cy="-8" rx="34" ry="8" fill="${f.fellDunkel}" opacity=".5"/>`;
+  if (art.figur.muster === 'tigerstreifen') bauch += [-26, -12, 4, 18].map((x, i) => spitz(x, -2, 16, 6, -84 + i * 4, f.streifen)).join('');
+  if (art.figur.mollig || art.figur.aquarell) bauch += `<ellipse cx="0" cy="-8" rx="36" ry="9" fill="${f.fellDunkel}" opacity=".55"/>`;
+  bauch += `</g><ellipse cx="0" cy="-22" rx="42" ry="20" fill="none" ${L}${tusche(art, id)}/>`;
+  const schwanzPfad = 'M-40 -16 C -62 -14 -72 -30 -62 -44';
+  const sch = ['flausch', 'wolke'].includes(art.figur.schwanz)
+    ? `<path d="M-38 -12 C -70 -8 -84 -34 -70 -56 C -62 -66 -50 -62 -52 -52 C -62 -40 -56 -26 -36 -24Z" fill="${f.fell}" ${L}/>`
+    : `<path d="${schwanzPfad}" stroke="${f.umriss}" stroke-width="${11 + sw * 2}" fill="none" stroke-linecap="round"/>
+       <path d="${schwanzPfad}" stroke="${f.fell}" stroke-width="11" fill="none" stroke-linecap="round"/>
+       ${art.figur.schwanz === 'geringelt' ? `<path d="${schwanzPfad}" stroke="${f.streifen}" stroke-width="11" stroke-dasharray="5 7" fill="none"/>` : ''}
+       ${f.fleckB ? `<path d="M-66 -34 C -66 -38 -64 -42 -62 -44" stroke="${f.fleckB}" stroke-width="11" fill="none" stroke-linecap="round"/>` : ''}`;
+  const hs = 0.72 * (1 + 0.15 * k);
+  return `<g transform="translate(-40 -16)"><g class="k-schwanz"><g transform="translate(40 16)">${sch}</g></g></g>
+    ${bein(-28, -18, 'k-bein-a')}${bein(-14, 8, 'k-bein-b')}
+    ${bauch}
+    <g transform="translate(48 -28) rotate(78) scale(${r1(hs * 100) / 100}) translate(0 92)">${kopf(art, f, zustand, k, id)}</g>
+    ${bein(8, 14, '', 30)}${bein(26, -8, '', 30)}
+    <g transform="translate(17 -84)"><g class="k-wolle">${wollknaeuel(17)}</g></g>
+    <ellipse cx="10" cy="-66" rx="6" ry="5" fill="${pfote}" ${linie(art, f, 0.7)}/><ellipse cx="24" cy="-66" rx="6" ry="5" fill="${pfote}" ${linie(art, f, 0.7)}/>`;
 }
 
 // ---------- Effekte ----------
@@ -516,6 +558,9 @@ export function zeichneKatze({ art, groesse = 1, zustand = 'gluecklich', pose = 
       ${bein(-26, 'k-bein-a', f.pfote || f.bauch)}${bein(18, 'k-bein-b', f.pfote || f.bauch)}
       <g transform="translate(30 -60) scale(${r1(hs * 100) / 100}) translate(0 92)">${kopf(art, f, zustand, k, id)}</g>`;
     hoeheEinheiten = 60 + (-ohrOben - 92) * hs;
+  } else if (pose === 'spielen') {
+    figur = spielend(art, f, zustand, k, id);
+    hoeheEinheiten = 108;
   } else if (fig.form === 'stehend') {
     ({ figur, hoeheEinheiten } = figurStehend(art, f, zustand, k, id));
   } else if (fig.form === 'bohne') {
