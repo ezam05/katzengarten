@@ -245,7 +245,7 @@ button:focus-visible, [tabindex]:focus-visible {
   transition: transform .15s;
 }
 .rund-knopf:active { transform: scale(.92); }
-.rund-knopf svg { width: 28px; height: 28px; }
+.rund-knopf > svg { width: 28px; height: 28px; }
 .rund-knopf #freundin-mini { width: 40px; height: 44px; }
 .ton-knopf { font-size: 22px; }
 
@@ -359,7 +359,7 @@ button:focus-visible, [tabindex]:focus-visible {
 .feld-titel { margin: 10px 0 6px; font-family: var(--schrift-titel); font-weight: 600; font-size: 15px; color: var(--text-dunkel); }
 .w-auswahl { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 .w-karte { display: flex; flex-direction: column; align-items: center; padding: 6px 4px 8px; border-radius: 16px; background: linear-gradient(#E9F6FB, #F1F8E8); border: 3px solid transparent; font-family: var(--schrift-titel); font-weight: 600; font-size: 13px; color: var(--text-dunkel); }
-.w-karte svg { width: 100%; height: 86px; }
+.w-karte > svg { width: 100%; height: 86px; }
 .w-karte[aria-checked="true"] { border-color: var(--tropfen-hell); background: #E3F3FC; }
 .willkommen-blatt .anstupsen-knopf { margin-top: 10px; }
 
@@ -562,7 +562,7 @@ button:focus-visible, [tabindex]:focus-visible {
 /* Deko (Haus, Bäume, Kratzbaum …) und Katzen werden genau auf die Insel gelegt */
 .insel-deko, .g-katze { position: absolute; }
 .insel-deko { pointer-events: none; }
-.insel-deko svg, .g-figur svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; overflow: visible; }
+.insel-deko svg, .g-figur > svg { position: absolute; inset: 0; width: 100%; height: 100%; display: block; overflow: visible; }
 
 /* Katzen im Garten: laufen von Feld zu Feld */
 .g-katze {
@@ -577,12 +577,12 @@ button:focus-visible, [tabindex]:focus-visible {
 .g-wolle.gehoben { z-index: 1000 !important; cursor: grabbing; }
 .g-figur { position: absolute; inset: 0; pointer-events: none; transform-origin: 50% 94%; }
 .g-katze.nach-links .g-figur { transform: scaleX(-1); }
-.g-figur svg { transform-origin: 50% 94%; }
-.g-katze.laeuft .g-figur svg { animation: watscheln .28s ease-in-out infinite; }
-.g-katze.huepft .g-figur svg { animation: wippen .5s cubic-bezier(.3, 1.4, .5, 1); }
-.g-katze.schnurrt .g-figur svg { animation: schnurren .12s linear infinite; }
+.g-figur > svg { transform-origin: 50% 94%; }
+.g-katze.laeuft .g-figur > svg { animation: watscheln .28s ease-in-out infinite; }
+.g-katze.huepft .g-figur > svg { animation: wippen .5s cubic-bezier(.3, 1.4, .5, 1); }
+.g-katze.schnurrt .g-figur > svg { animation: schnurren .12s linear infinite; }
 .g-katze.gehoben { z-index: 999 !important; transition: none; filter: drop-shadow(0 16px 10px rgba(30, 50, 20, .3)); cursor: grabbing; }
-.g-katze.gehoben .g-figur svg { animation: zappeln .35s ease-in-out infinite alternate; }
+.g-katze.gehoben .g-figur > svg { animation: zappeln .35s ease-in-out infinite alternate; }
 .g-blase {
   position: absolute;
   left: 50%;
@@ -791,7 +791,7 @@ button:focus-visible, [tabindex]:focus-visible {
   background: url(../bilder/hintergrund.webp) center 92% / cover, #8FD14F;
   overflow: hidden;
 }
-.freundin-buehne svg { width: 100%; height: 100%; display: block; }
+.freundin-buehne > svg { width: 100%; height: 100%; display: block; }
 .freundin-werte { display: flex; gap: 10px; }
 .wert {
   flex: 1;
@@ -1151,11 +1151,11 @@ button:focus-visible, [tabindex]:focus-visible {
   }
   .konfetti { animation: none !important; opacity: .9; }
   .katze-huelle.federn { animation-duration: .25s; }
-  .katze-huelle.schnurren .katze, .g-katze.schnurrt .g-figur svg, .g-katze.laeuft .g-figur svg { animation: none; }
+  .katze-huelle.schnurren .katze, .g-katze.schnurrt .g-figur > svg, .g-katze.laeuft .g-figur > svg { animation: none; }
   .sprechblase .blase-inhalt { animation: none; }
   .faecher-knopf { transition: opacity .15s; }
   .unterblatt, .unterblatt-hintergrund, .garten-seite, .meldung, .insel { animation: none; }
-  .g-katze.huepft .g-figur svg { animation: none; }
+  .g-katze.huepft .g-figur > svg { animation: none; }
   .g-katze { transition: none; }
   .katze-huelle.huepfen { animation-duration: .3s; }
   .katze-huelle.wachsen, .katze-huelle.schlecken { animation: none; }
