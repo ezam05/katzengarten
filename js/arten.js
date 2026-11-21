@@ -89,7 +89,7 @@ ARTEN.push({
     foto: { bild: 'bilder/katzen/tanzkatze.png', breite: 240, hoehe: 240, boden: 0.87 },
     // zweite Katze: 30 Einzelbilder nebeneinander. ms = eine Drehung (3× schneller als das Original),
     // dauer = so lange bleibt sie, danach wieder das Tanzkätzchen. ton = Soundeffekt (Datei), kommt noch.
-    foto2: { bild: 'bilder/katzen/drehkatze-bilder.png', breite: 200, hoehe: 200, bilder: 30, ms: 1700, dauer: 3000, boden: 0.9, ton: null },
+    foto2: { bild: 'bilder/katzen/drehkatze-bilder.png', breite: 200, hoehe: 200, bilder: 30, ms: 1700, dauer: 3000, boden: 0.9, ton: 'ton/drehkatze.mp3' },
   },
 });
 

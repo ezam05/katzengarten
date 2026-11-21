@@ -1191,7 +1191,7 @@ function gartenAntippen(katze) {
     clearTimeout(katze.timer);
     katze.bild = '';
     katze.el.querySelector('svg').innerHTML = zeichneKatze({ art: katze.art, groesse: 1, zweite: true, effekte: false }).svg;
-    if (!datei(f2.ton)) miau({ hoch: 0.8, lang: 1.6 });
+    if (!datei(f2.ton, f2.dauer)) miau({ hoch: 0.8, lang: 1.6 });
     gartenBlase(katze, 'Wuiii! 🌀');
     setTimeout(() => { setzePose(katze, 'sitzen'); plane(katze, 2000); }, f2.dauer);
     return;
@@ -1573,7 +1573,7 @@ function zeigeZweiteKatze() {
   zweiteBis = Date.now() + f2.dauer;
   letzteZeichnung = '';
   zeichne();
-  if (!datei(f2.ton)) miau({ hoch: 0.8, lang: 1.6 });
+  if (!datei(f2.ton, f2.dauer)) miau({ hoch: 0.8, lang: 1.6 });
   kurzeBlase('Wuiii! 🌀', false, 2500);
   setTimeout(() => { letzteZeichnung = ''; zeichne(); }, f2.dauer + 50);
 }

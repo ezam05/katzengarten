@@ -96,10 +96,25 @@ export function schnurrenStopp() {
   schnurren = null;
 }
 
-// Tondatei abspielen (z. B. Soundeffekt der zweiten Katze), sonst nichts
-export function datei(url) {
+// Tondatei abspielen (z. B. Soundeffekt der zweiten Katze). bis: nach so vielen ms leise ausblenden.
+let laufend = null;
+export function datei(url, bis = 0) {
   if (!an || !url) return false;
-  try { const a = new Audio(url); a.play().catch(() => {}); return true; } catch { return false; }
+  try {
+    laufend?.pause();
+    const a = new Audio(url);
+    laufend = a;
+    a.play().catch(() => {});
+    if (bis) {
+      setTimeout(() => {
+        const schritt = setInterval(() => {
+          a.volume = Math.max(0, a.volume - 0.2);
+          if (a.volume <= 0.01) { clearInterval(schritt); a.pause(); }
+        }, 40);
+      }, Math.max(0, bis - 200));
+    }
+    return true;
+  } catch { return false; }
 }
 
 // Plätschern: ein paar kurze «Blubb»-Töne (Milch in den Napf)
