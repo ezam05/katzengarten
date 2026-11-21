@@ -471,6 +471,33 @@ function spielend(art, f, zustand, k, id) {
     <ellipse cx="10" cy="-66" rx="6" ry="5" fill="${pfote}" ${linie(art, f, 0.7)}/><ellipse cx="24" cy="-66" rx="6" ry="5" fill="${pfote}" ${linie(art, f, 0.7)}/>`;
 }
 
+// ---------- Foto-Katzen (Bilder statt Formen) ----------
+// zweite: die zweite Katze zeigen (Einzelbilder nebeneinander, laufen mit CSS durch)
+function fotoKatze({ art, groesse, zustand, pose, effekte, zweite, feiern }) {
+  const g = Math.max(0, Math.min(1, groesse));
+  const s = 0.55 + 0.45 * g;
+  const H = 150 * s;
+  const foto = zweite && art.figur.foto2 ? art.figur.foto2 : art.figur.foto;
+  const B = H * foto.breite / foto.hoehe;
+  const x = -B / 2, y = -H * foto.boden;
+  let bild;
+  if (zweite && art.figur.foto2) {
+    const f2 = art.figur.foto2;
+    bild = `<svg x="${r1(x)}" y="${r1(y)}" width="${r1(B)}" height="${r1(H)}" viewBox="0 0 ${f2.breite} ${f2.hoehe}" overflow="hidden">
+      <image class="k-sprite" href="${f2.bild}" width="${f2.breite * f2.bilder}" height="${f2.hoehe}" style="--sprite-weg:${-f2.breite * f2.bilder}px;--sprite-bilder:${f2.bilder};animation-duration:${f2.ms}ms"/></svg>`;
+  } else {
+    bild = `<image href="${foto.bild}" x="${r1(x)}" y="${r1(y)}" width="${r1(B)}" height="${r1(H)}"/>`;
+  }
+  let figur = bild;
+  if (pose === 'schlafen') figur = `<g transform="scale(1 .82)" opacity=".85">${bild}</g>${effekte ? `<g transform="scale(${r1(s * 100) / 100})">${ZZZ}</g>` : ''}`;
+  if (pose === 'spielen') figur = `${bild}<g transform="translate(0 ${r1(-H * 0.62)})"><g class="k-wolle">${wollknaeuel(14 * s + 4)}</g></g>`;
+  let svg = `<ellipse cx="0" cy="0" rx="${r1(40 * s)}" ry="${r1(6 * s)}" fill="#1E4A10" opacity=".18"/>
+    <g class="k-atmen">${figur}</g>`;
+  const hoehe = H * (pose === 'schlafen' ? 0.75 : 0.95);
+  if (effekte && (zustand === 'fertig' || feiern)) svg += konfetti(hoehe, zaehler);
+  return { svg: `<g class="katze foto art-${art.id} zustand-${zustand} pose-${pose}${zweite ? ' zweite' : ''}">${svg}</g>`, hoehe };
+}
+
 // ---------- Effekte ----------
 
 function funkelStern(x, y, g, nr) {
@@ -496,7 +523,8 @@ function konfetti(hoehe, nr) {
 // ---------- Ganze Katze ----------
 
 // feiern: Konfetti und Sterne, z. B. wenn die Katze eine neue Stufe erreicht
-export function zeichneKatze({ art, groesse = 1, zustand = 'gluecklich', pose = 'sitzen', effekte = true, feiern = false }) {
+export function zeichneKatze({ art, groesse = 1, zustand = 'gluecklich', pose = 'sitzen', effekte = true, feiern = false, zweite = false }) {
+  if (art.figur.foto) { zaehler++; return fotoKatze({ art, groesse, zustand, pose, effekte, zweite, feiern }); }
   const id = `k${++zaehler}`;
   const f = art.farben;
   const fig = art.figur;

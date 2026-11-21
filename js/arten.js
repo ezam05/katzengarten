@@ -79,6 +79,19 @@ export const ARTEN = [
   },
 ];
 
+// Foto-Katze (Elynas Bilder, Hintergrund entfernt). 3× schnell antippen: die zweite Katze dreht sich.
+ARTEN.push({
+  id: 'tanzkatze', name: 'Tanzkätzchen', tage: 20, preis: 20,
+  satz: 'Tanzt den ganzen Tag. Tipp 3× schnell drauf!',
+  farben: { fell: '#B9AFA6', fellDunkel: '#8E847C', bauch: '#FFFFFF', streifen: '#6F6A66', umriss: '#3A3330', ohrInnen: '#F2B8B0', nase: '#E9A7B0', auge: '#1F1A18', wange: '#FFB0A8' },
+  figur: {
+    strich: 2.6,
+    foto: { bild: 'bilder/katzen/tanzkatze.png', breite: 240, hoehe: 240, boden: 0.87 },
+    // zweite Katze: 30 Einzelbilder nebeneinander, eine Drehung dauert 5,1 s
+    foto2: { bild: 'bilder/katzen/drehkatze-bilder.png', breite: 200, hoehe: 200, bilder: 30, ms: 5140, boden: 0.9, ton: null },
+  },
+});
+
 export function artNachId(id) {
   return ARTEN.find((a) => a.id === id) ?? ARTEN[0];
 }

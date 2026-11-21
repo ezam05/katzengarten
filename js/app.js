@@ -2,7 +2,7 @@
 
 import { ARTEN, artNachId, milchBisGross } from './arten.js';
 import { zeichneKatze, zufall, wollknaeuel } from './katze.js';
-import { miau, schnurrenStart, schnurrenStopp, plaetschern, tonAn, tonEntsperren } from './ton.js';
+import { miau, schnurrenStart, schnurrenStopp, plaetschern, tonAn, tonEntsperren, datei } from './ton.js';
 import {
   STUFEN, ZIEL_ML, stufeFuerMilch, groesseFuerMilch, milchFuerStufe, ZURUECKHOLEN_PREIS, tagesSchluessel, zeitImTag, stundeImTag,
   eintraegeVomTag, summeMl, glaeserBisZiel, katzenZustand, milchPortion,
@@ -333,13 +333,14 @@ function zeichne() {
   // Spielen nur, solange die Katze da ist (weg/gross beendet es)
   if (spielt && (daten.katze.status === 'weg' || zustand === 'fertig')) { spielt = false; wolle.el.style.display = ''; setzeWolle(WOLLE_X, WOLLE_Y); }
   const pose = spielt ? 'spielen' : 'sitzen';
-  const schluessel = [art.id, bild, g, feiern, pose].join('|');
+  const zweite = Date.now() < zweiteBis && !spielt;
+  const schluessel = [art.id, bild, g, feiern, pose, zweite].join('|');
   if (schluessel !== letzteZeichnung && !fuettertGerade) {
     if (zustand === 'weg') {
       el.huelle.innerHTML = wegBild(daten.katze.name);
       katzenHoehe = 128;
     } else {
-      const { svg, hoehe } = zeichneKatze({ art, groesse: g, zustand: bild, feiern, pose });
+      const { svg, hoehe } = zeichneKatze({ art, groesse: g, zustand: bild, feiern, pose, zweite });
       el.huelle.innerHTML = svg;
       katzenHoehe = hoehe;
     }
@@ -1184,6 +1185,17 @@ function zeigeGartenName(katze) {
 }
 
 function gartenAntippen(katze) {
+  if (katze.art.figur.foto2 && zaehleTipps(katze.tipps ||= [])) {
+    katze.tipps.length = 0;
+    const f2 = katze.art.figur.foto2;
+    clearTimeout(katze.timer);
+    katze.bild = '';
+    katze.el.querySelector('svg').innerHTML = zeichneKatze({ art: katze.art, groesse: 1, zweite: true, effekte: false }).svg;
+    if (!datei(f2.ton)) miau({ hoch: 0.8, lang: 1.6 });
+    gartenBlase(katze, 'Wuiii! 🌀');
+    setTimeout(() => { setzePose(katze, 'sitzen'); plane(katze, 2000); }, f2.ms);
+    return;
+  }
   miau({ hoch: 0.9 + Math.random() * 0.3 });
   const schlief = katze.pose === 'schlafen';
   setzePose(katze, 'sitzen');
@@ -1547,7 +1559,28 @@ function herzBei(clientX, clientY) {
 
 // ---------- Katze antippen und streicheln ----------
 
+// 3× schnell antippen (Foto-Katze): die zweite Katze erscheint und dreht sich einmal
+const DREIFACH_MS = 1500;
+let zweiteBis = 0;
+function zaehleTipps(liste) {
+  const t = Date.now();
+  liste.push(t);
+  while (liste.length && t - liste[0] > DREIFACH_MS) liste.shift();
+  return liste.length >= 3;
+}
+function zeigeZweiteKatze() {
+  const f2 = katzenArt().figur.foto2;
+  zweiteBis = Date.now() + f2.ms;
+  letzteZeichnung = '';
+  zeichne();
+  if (!datei(f2.ton)) miau({ hoch: 0.8, lang: 1.6 });
+  kurzeBlase('Wuiii! 🌀', false, 2500);
+  setTimeout(() => { letzteZeichnung = ''; zeichne(); }, f2.ms + 50);
+}
+const startTipps = [];
+
 function antippen() {
+  if (katzenArt().figur.foto2 && daten.katze.status !== 'weg' && zaehleTipps(startTipps)) { startTipps.length = 0; zeigeZweiteKatze(); return; }
   starteAnimation('federn');
   if (daten.katze.status !== 'weg') miau({ hoch: aktuellerZustand() === 'hungrig' ? 1.15 : 1, lang: aktuellerZustand() === 'hungrig' ? 1.4 : 1 });
   const zustand = aktuellerZustand();

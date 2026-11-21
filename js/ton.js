@@ -96,6 +96,12 @@ export function schnurrenStopp() {
   schnurren = null;
 }
 
+// Tondatei abspielen (z. B. Soundeffekt der zweiten Katze), sonst nichts
+export function datei(url) {
+  if (!an || !url) return false;
+  try { const a = new Audio(url); a.play().catch(() => {}); return true; } catch { return false; }
+}
+
 // Plätschern: ein paar kurze «Blubb»-Töne (Milch in den Napf)
 export function plaetschern() {
   const a = audio();

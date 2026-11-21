@@ -919,6 +919,11 @@ button:focus-visible, [tabindex]:focus-visible {
 .pose-schlafen .k-blinzeln, .zustand-gestreichelt .k-blinzeln { animation: none; }
 .konfetti { animation: konfetti 3s linear infinite; }
 .k-wolle { animation: wolle 1.1s ease-in-out infinite; }
+/* Foto-Katzen */
+.k-sprite { animation-name: sprite; animation-timing-function: steps(var(--sprite-bilder)); animation-iteration-count: infinite; }
+@keyframes sprite { to { transform: translateX(var(--sprite-weg)); } }
+.katze.foto.zustand-traurig image, .katze.foto.zustand-hungrig image { filter: saturate(.55) brightness(.92); }
+.katze.foto.zustand-gestreichelt .k-atmen { animation: schnurren .12s linear infinite; }
 .wolle { cursor: grab; outline: none; touch-action: none; }
 .wolle .wolle-knaeuel { animation: wolle-warten 2.4s ease-in-out infinite; filter: drop-shadow(0 3px 2px rgba(30, 60, 20, .3)); }
 .wolle.gehoben { cursor: grabbing; }
