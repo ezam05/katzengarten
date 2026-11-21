@@ -3,9 +3,9 @@
 import { ARTEN, artNachId, milchBisGross } from './arten.js';
 import { zeichneKatze, zufall } from './katze.js';
 import {
-  STUFEN, ZIEL_ML, stufeFuerMilch, tagesSchluessel, zeitImTag, stundeImTag,
+  STUFEN, ZIEL_ML, stufeFuerMilch, groesseFuerMilch, milchFuerStufe, ZURUECKHOLEN_PREIS, tagesSchluessel, zeitImTag, stundeImTag,
   eintraegeVomTag, summeMl, glaeserBisZiel, katzenZustand, milchPortion,
-  rechneTagAb, offeneTage, verschiebeTag, SCHWELLE_WEG, SCHWELLE_ZWEITER, MILCH_MAX_ML,
+  rechneTagAb, offeneTage, verschiebeTag, SCHWELLE_WEG, SCHWELLE_ZWEITER,
 } from './regeln.js';
 
 const KATZE_X = 178;    // Boden-Mitte der Katze in der Szene
@@ -25,6 +25,8 @@ function startDaten() {
     katze: { name: 'Mimi', artId: 'toast', milch: 0, status: 'waechst' }, // status: 'waechst' | 'fertig' | 'weg'
     streak: 0,
     vortagMl: null,        // Menge vom letzten abgerechneten Tag (für «zwei Tage unter 1,5 l»)
+    gestartet: false,      // Willkommen (Name, erstes Kätzchen) schon gemacht?
+    demoSichtbar: false,   // Demo-Knopf zeigen (geheim: 3× schnell auf das Holzschild tippen)
     muenzen: 0,
     abgerechnetBis: null,  // letzter abgerechneter Tag, z. B. '2026-11-06'
     eintraege: [],         // Getränke { ml, zeit }
@@ -63,6 +65,8 @@ function datenLaden() {
         fuetterungen: Array.isArray(d.fuetterungen) ? d.fuetterungen : [],
         garten: Array.isArray(d.garten) ? d.garten : [],
       };
+      // wer schon Daten hat, braucht kein Willkommen mehr
+      if (d.gestartet === undefined) geladen.gestartet = geladen.eintraege.length > 0 || geladen.garten.length > 0 || geladen.katze.milch > 0;
       // gratis Arten sind immer freigeschaltet
       geladen.freigeschaltet = [...new Set([...s.freigeschaltet, ...(d.freigeschaltet || [])])];
       return geladen;
@@ -96,9 +100,10 @@ function jetzt() {
 const heute = () => tagesSchluessel(jetzt());
 const heuteMl = () => summeMl(eintraegeVomTag(daten.eintraege, heute()));
 const heuteGefuettert = () => summeMl(eintraegeVomTag(daten.fuetterungen, heute()));
-const satt = () => heuteGefuettert() >= MILCH_MAX_ML;
 const katzenArt = () => artNachId(daten.katze.artId);
-const groesse = (k = daten.katze) => Math.min(1, k.milch / milchBisGross(artNachId(k.artId)));
+const groesse = (k = daten.katze) => groesseFuerMilch(k.milch, milchBisGross(artNachId(k.artId)));
+const stufe = (k = daten.katze) => stufeFuerMilch(k.milch, milchBisGross(artNachId(k.artId)));
+let feierBis = 0; // bis wann Konfetti für eine neue Stufe fliegt
 
 function letzteTrinkZeit() {
   const t = jetzt();
@@ -141,6 +146,7 @@ const el = {
   tropfenKnopf: $('#tropfen-knopf'),
   rueckgaengig: $('#rueckgaengig'),
   aktion: $('#aktion-knopf'),
+  aktionZweit: $('#aktion-zweit'),
   ansage: $('#ansage'),
   demoKnopf: $('.demo-knopf'),
   demoPanel: $('#demo-panel'),
@@ -187,14 +193,17 @@ function normalerSatz(zustand) {
   const ml = heuteMl();
   const n = glaeserBisZiel(ml);
   if (zustand === 'fertig') return { text: 'Ich bin gross! Ab in den Garten 🏡', dringend: false };
-  if (zustand === 'weg') return { text: `${daten.katze.name} ist abgehauen… 😿`, dringend: true };
+  if (zustand === 'weg') {
+    return daten.muenzen >= ZURUECKHOLEN_PREIS
+      ? { text: `${daten.katze.name} ist abgehauen… Hol mich zurück! 🪙`, dringend: true }
+      : { text: `${daten.katze.name} ist abgehauen… 😿`, dringend: true };
+  }
   if (zustand === 'hungrig') return { text: 'Ich hab Hunger auf Milch 🥺', dringend: true };
   const warnung = abhauWarnung();
   if (warnung) return { text: warnung, dringend: true };
   switch (zustand) {
     case 'traurig': return { text: n <= 2 ? `Noch ${n} ${n === 1 ? 'Glas' : 'Gläser'}, dann gibt's Milch 🥛` : 'Trinkst du was? Dann krieg ich Milch 🥛', dringend: false };
     default:
-      if (satt()) return { text: 'Ich bin pappsatt und glücklich 😺', dringend: false };
       if (n === 0) return { text: 'Geschafft! 2 Liter 🎉', dringend: false };
       return { text: `Noch ${n} ${n === 1 ? 'Glas' : 'Gläser'} bis zum Ziel!`, dringend: false };
   }
@@ -226,7 +235,7 @@ function wegBild(name) {
   let s = '';
   [[-30, -22, 80], [-10, -14, 100], [12, -24, 80], [34, -16, 100], [58, -26, 80], [82, -18, 100]].forEach(([x, y, w]) => { s += pfote(x, y, w); });
   return `<g class="katze zustand-weg">${s}
-    <g transform="translate(6 -66) rotate(-6)">
+    <g transform="translate(6 -104) rotate(-6)">
       <rect x="-34" y="-22" width="68" height="40" rx="4" fill="#FFFDF6" stroke="#D9C2A3" stroke-width="1.5"/>
       <text class="t-zettel" x="0" y="-4" text-anchor="middle">Bin weg…</text>
       <text class="t-zettel" x="0" y="11" text-anchor="middle">${name} 🐾</text>
@@ -290,13 +299,13 @@ function zeigeName(name) {
   el.nameKnopf.setAttribute('aria-label', `${name}. Namen ändern`);
 }
 
-// Die Flasche zeigt, wie viel Milch das Kätzchen heute schon bekommen hat (voll = 3 l)
+// Die Flasche zeigt, wie viel Milch das Kätzchen heute schon bekommen hat (voll = 2 l)
 function zeigeFlasche() {
   const ml = heuteGefuettert();
-  const h = Math.round(58 * Math.min(1, Math.max(0.15, ml / MILCH_MAX_ML)));
+  const h = Math.round(58 * Math.min(1, Math.max(0.15, ml / ZIEL_ML)));
   el.flascheMilch.setAttribute('y', -4 - h);
   el.flascheMilch.setAttribute('height', h);
-  el.flascheText.textContent = satt() ? 'satt 😺' : `heute ${liter(ml)}`;
+  el.flascheText.textContent = `heute ${liter(ml)}`;
   el.flasche.setAttribute('aria-label', `Milchflasche: heute ${liter(ml)} Milch bekommen. Milch gibt es automatisch, wenn du trinkst.`);
 }
 
@@ -308,13 +317,14 @@ function zeichne() {
   const ml = heuteMl();
 
   // Katze nur neu zeichnen, wenn sich etwas geändert hat (sonst ruckelt die Animation)
-  const schluessel = [art.id, bild, g].join('|');
+  const feiern = Date.now() < feierBis;
+  const schluessel = [art.id, bild, g, feiern].join('|');
   if (schluessel !== letzteZeichnung && !fuettertGerade) {
     if (zustand === 'weg') {
       el.huelle.innerHTML = wegBild(daten.katze.name);
-      katzenHoehe = 90;
+      katzenHoehe = 128;
     } else {
-      const { svg, hoehe } = zeichneKatze({ art, groesse: g, zustand: bild });
+      const { svg, hoehe } = zeichneKatze({ art, groesse: g, zustand: bild, feiern });
       el.huelle.innerHTML = svg;
       katzenHoehe = hoehe;
     }
@@ -347,11 +357,15 @@ function zeichne() {
     el.aktion.textContent = '🏡 In den Katzengarten bringen';
     el.aktion.hidden = false;
   } else if (daten.katze.status === 'weg') {
-    el.aktion.textContent = '🍼 Neues Kätzchen holen';
+    const kannZurueck = daten.muenzen >= ZURUECKHOLEN_PREIS;
+    el.aktion.textContent = kannZurueck ? `🪙 ${daten.katze.name} zurückholen · ${ZURUECKHOLEN_PREIS} 🪙` : '🍼 Neues Kätzchen holen';
     el.aktion.hidden = false;
+    el.aktionZweit.textContent = kannZurueck ? '🍼 Lieber ein neues Kätzchen' : `Zurückholen kostet ${ZURUECKHOLEN_PREIS} 🪙 (du hast ${daten.muenzen})`;
+    el.aktionZweit.disabled = !kannZurueck;
   } else {
     el.aktion.hidden = true;
   }
+  el.aktionZweit.hidden = daten.katze.status !== 'weg' || el.aktion.hidden;
   el.balken.style.display = el.aktion.hidden ? '' : 'none';
 
   if (!blaseTimer) zeigeNormaleBlase(false);
@@ -457,7 +471,7 @@ function wackeln(ziel) {
 // Flasche antippen: erklärt, wie das Füttern geht
 function flascheAntippen() {
   wackeln(el.flasche);
-  kurzeBlase(satt() ? 'Ich bin pappsatt für heute 😺' : 'Milch kommt von selbst, wenn du trinkst 💧', false, 3200);
+  kurzeBlase('Milch kommt von selbst, wenn du trinkst 💧', false, 3200);
 }
 el.flasche.addEventListener('click', flascheAntippen);
 el.flasche.addEventListener('keydown', (e) => {
@@ -470,9 +484,13 @@ function wachstumErklaeren() {
   const k = daten.katze;
   if (k.status === 'fertig') { kurzeBlase('Ich bin gross! Ab in den Garten 🏡'); return; }
   if (k.status === 'weg') { kurzeBlase('Hol dir ein neues Kätzchen 🍼'); return; }
-  const rest = milchBisGross(katzenArt()) - k.milch;
+  const bis = milchBisGross(katzenArt());
+  const st = stufe();
+  const bisNaechste = milchFuerStufe(st + 1, bis) - k.milch;
+  const rest = bis - k.milch;
   const tage = Math.ceil(rest / ZIEL_ML);
-  kurzeBlase(`Noch ${liter(rest)} Wasser, dann bin ich gross! (ca. ${tage} ${tage === 1 ? 'Tag' : 'Tage'})`, false, 4200);
+  const naechste = st + 1 < 3 ? `Noch ${liter(bisNaechste)} bis ${STUFEN[st + 1] === 'Junge Katze' ? 'zur jungen Katze' : 'zum Kätzchen'}, ` : 'Noch ';
+  kurzeBlase(`Ich bin ${st === 0 ? 'ein Baby' : st === 1 ? 'ein Kätzchen' : 'eine junge Katze'}. ${naechste}${liter(rest)} bis gross (ca. ${tage} ${tage === 1 ? 'Tag' : 'Tage'}) 🐾`, false, 5000);
 }
 $('#balken-knopf').addEventListener('click', wachstumErklaeren);
 $('#balken-knopf').addEventListener('keydown', (e) => {
@@ -514,9 +532,31 @@ function neuesKaetzchenHolen() {
   el.ansage.textContent = `${weg} ist weg. ${daten.katze.name} ist neu bei dir.`;
 }
 
+// Abgehauene Katze für Münzen zurückholen: Milch bleibt, die Streak ist weg
+function zurueckholen() {
+  if (daten.katze.status !== 'weg' || daten.muenzen < ZURUECKHOLEN_PREIS) return;
+  daten.muenzen -= ZURUECKHOLEN_PREIS;
+  daten.katze.status = 'waechst';
+  daten.streak = 0;
+  daten.vortagMl = null;
+  demo.zustand = null;
+  speichern();
+  letzteZeichnung = '';
+  zeichne();
+  starteAnimation('huepfen');
+  kurzeBlase('Ich bin wieder da! 😻 Die Streak fängt neu an.', false, 4500);
+  el.ansage.textContent = `${daten.katze.name} ist zurück. Noch ${daten.muenzen} Münzen.`;
+}
+
 el.aktion.addEventListener('click', () => {
   if (daten.katze.status === 'fertig') inDenGartenBringen();
-  else if (daten.katze.status === 'weg') neuesKaetzchenHolen();
+  else if (daten.katze.status === 'weg') {
+    if (daten.muenzen >= ZURUECKHOLEN_PREIS) zurueckholen();
+    else neuesKaetzchenHolen();
+  }
+});
+el.aktionZweit.addEventListener('click', () => {
+  if (daten.katze.status === 'weg') neuesKaetzchenHolen();
 });
 
 // Namen ändern (Schild links vom Balken)
@@ -1255,6 +1295,7 @@ document.addEventListener('keydown', (e) => { if (e.key === 'Escape') schliesseG
 
 function trinken(ml) {
   const vorher = heuteMl();
+  const stufeVorher = stufe();
   daten.eintraege.push({ ml, zeit: jetzt() });
   const portion = fuettereAutomatisch();
   const gross = daten.katze.status === 'fertig';
@@ -1264,7 +1305,9 @@ function trinken(ml) {
 
   zeigeTrinkBlase(ml);
   const nachher = heuteMl();
-  const zielSatz = vorher < ZIEL_ML && nachher >= ZIEL_ML ? 'Geschafft! 2 Liter 🎉 ' : '';
+  // Münze und Streak gibt es bei der Abrechnung morgen um 4 Uhr
+  const zielSatz = vorher < ZIEL_ML && nachher >= ZIEL_ML ? 'Geschafft! 2 Liter 🎉 Morgen früh gibt es 🪙. ' : '';
+  const neueStufe = !gross && stufe() > stufeVorher ? stufe() : null;
   // nach dem Platzen der Tropfen-Blase: Milch giessen (oder nur eine Sprechblase).
   // Eigener Zeitgeber, damit Antippen oder ein weiteres Getränk die Milch nicht verschluckt.
   el.blase.innerHTML = '';
@@ -1273,9 +1316,13 @@ function trinken(ml) {
   clearTimeout(trinken.milchTimer);
   trinken.milchTimer = setTimeout(() => {
     if (portion > 0) {
+      if (neueStufe !== null) feierBis = Date.now() + 1900 + 4500;
       milchAnimation(portion, () => {
         if (gross) kurzeBlase('Ich bin gross geworden! 🎉', false, 4000);
-        else kurzeBlase(`${zielSatz}Mmh, Milch! +${dl(portion)} 😋`, false, 3200);
+        else if (neueStufe !== null) {
+          kurzeBlase(`Ich bin jetzt ${neueStufe === 1 ? 'ein Kätzchen' : 'eine junge Katze'}! 🎉`, false, 4500);
+          setTimeout(() => { letzteZeichnung = ''; zeichne(); }, 4600); // Konfetti wieder weg
+        } else kurzeBlase(`${zielSatz}Mmh, Milch! +${dl(portion)} 😋`, false, 3200);
       });
     } else {
       fuettertGerade = false; // falls ein vorheriges Getränk noch wartete
@@ -1283,7 +1330,6 @@ function trinken(ml) {
       zeichne();
       starteAnimation('huepfen');
       if (zielSatz) kurzeBlase(zielSatz, false, 3500);
-      else if (satt()) kurzeBlase('Danke! Ich bin aber schon pappsatt 😺');
       else kurzeBlase('Danke! 💧');
     }
   }, 1300);
@@ -1566,12 +1612,15 @@ $('#demo-muenzen').addEventListener('click', () => {
 $('#demo-reset').addEventListener('click', () => {
   if (!confirm('Wirklich alles zurücksetzen? Alle Einträge gehen verloren.')) return;
   try { localStorage.removeItem(SPEICHER_NAME); } catch { /* egal */ }
+  const demoAn = daten.demoSichtbar;
   daten = startDaten();
+  daten.demoSichtbar = demoAn;
   demo.stunde = null;
   demo.zustand = null;
   versteckeRueckgaengig();
   abrechnen();
   zeichne();
+  oeffneWillkommen();
 });
 
 // ---------- Freundin ----------
@@ -1917,11 +1966,85 @@ $('#zeigen-knopf').addEventListener('click', async () => {
 
 $('#uhr-knopf').addEventListener('click', aufDieUhr);
 
+// ---------- Willkommen (erster Start): Name, erstes Kätzchen ----------
+
+const willkommen = { huelle: $('#willkommen'), wahl: 'toast' };
+const ERSTE_KATZEN = ['toast', 'tiger', 'glueck']; // davon darf man eines gratis wählen
+
+function zeichneWillkommenAuswahl() {
+  const box = $('#w-auswahl');
+  box.innerHTML = '';
+  for (const id of ERSTE_KATZEN) {
+    const art = artNachId(id);
+    const { svg } = zeichneKatze({ art, groesse: 0, zustand: 'gluecklich', effekte: false });
+    const k = document.createElement('button');
+    k.type = 'button';
+    k.className = 'w-karte';
+    k.setAttribute('role', 'radio');
+    k.setAttribute('aria-checked', String(id === willkommen.wahl));
+    k.dataset.art = id;
+    k.innerHTML = `<svg viewBox="-60 -110 120 116" aria-hidden="true">${svg}</svg>${art.name}`;
+    box.appendChild(k);
+  }
+}
+
+function oeffneWillkommen() {
+  $('#w-name').value = daten.name || '';
+  $('#w-katze').value = daten.katze.name;
+  zeichneWillkommenAuswahl();
+  willkommen.huelle.hidden = false;
+  $('#w-name').focus();
+}
+
+$('#w-auswahl').addEventListener('click', (e) => {
+  const k = e.target.closest('.w-karte');
+  if (!k) return;
+  willkommen.wahl = k.dataset.art;
+  zeichneWillkommenAuswahl();
+  $(`.w-karte[data-art="${willkommen.wahl}"]`)?.focus();
+});
+
+$('#w-los').addEventListener('click', () => {
+  const name = sauber($('#w-name').value, 20);
+  if (name) daten.name = name;
+  daten.katze = { name: sauber($('#w-katze').value) || neuerName(), artId: willkommen.wahl, milch: 0, status: 'waechst' };
+  if (!daten.freigeschaltet.includes(willkommen.wahl)) daten.freigeschaltet.push(willkommen.wahl);
+  daten.gestartet = true;
+  speichern();
+  willkommen.huelle.hidden = true;
+  letzteZeichnung = '';
+  zeichne();
+  kurzeBlase(`Hallo${daten.name ? ` ${daten.name}` : ''}! Ich bin ${daten.katze.name}. Trink was, dann krieg ich Milch 🍼`, false, 5000);
+  freundinAusLink(); // kam die App über den Katzen-Link einer Kollegin?
+});
+
+// ---------- Demo-Knopf: versteckt, 3× schnell auf das Holzschild tippen ----------
+
+function zeigeDemoKnopf() {
+  el.demoKnopf.hidden = !daten.demoSichtbar;
+  if (!daten.demoSichtbar) { el.demoPanel.hidden = true; el.demoKnopf.setAttribute('aria-expanded', 'false'); }
+}
+const schildTipps = [];
+$('#schild').addEventListener('click', () => {
+  const t = Date.now();
+  schildTipps.push(t);
+  while (schildTipps.length && t - schildTipps[0] > 1500) schildTipps.shift();
+  if (schildTipps.length < 3) return;
+  schildTipps.length = 0;
+  daten.demoSichtbar = !daten.demoSichtbar;
+  speichern();
+  zeigeDemoKnopf();
+  zeigeMeldung(daten.demoSichtbar ? '🧪 Demo-Knopf an' : '🧪 Demo-Knopf aus', false);
+});
+
+
 // ---------- Start ----------
 
 abrechnen();
 zeichne();
-freundinAusLink();
+zeigeDemoKnopf();
+if (daten.gestartet) freundinAusLink();
+else oeffneWillkommen(); // ein Katzen-Link wird danach übernommen
 window.addEventListener('hashchange', freundinAusLink); // Link kommt, während die App schon offen ist
 document.fonts?.ready.then(() => { zeigeName(daten.katze.name); if (!blaseTimer) zeigeNormaleBlase(false); });
 // Zustand hängt von der Uhrzeit ab: jede Minute neu prüfen

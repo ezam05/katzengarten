@@ -8,20 +8,23 @@ export const PLAN_ENDE = 22;   // Uhr
 export const TAGESWECHSEL = 4; // Uhr: Hier endet ein Tag
 export const HUNGER_NACH_MS = 5 * 60 * 60 * 1000; // 5 Stunden
 export const FROH_NACH_TRINKEN_MS = 45 * 60 * 1000; // nach einem Getränk ist die Katze 45 Minuten zufrieden
-export const MILCH_MAX_ML = 3000; // so viel Milch trinkt das Kätzchen höchstens pro Tag (Tagesziel bleibt 2 l)
+export const ZURUECKHOLEN_PREIS = 4; // so viele Münzen kostet es, eine abgehauene Katze zurückzuholen
 
-// Wachstumsstufen nach dem Anteil der getrunkenen Milch
-export const STUFEN = ['Neugeboren', 'Baby', 'Kätzchen', 'Junge Katze', 'Gross'];
+// Die Katze wächst in Stufen: Baby → Kätzchen (ab ⅓ der Milch) → junge Katze (ab ⅔) → gross
+export const STUFEN = ['Baby', 'Kätzchen', 'Junge Katze', 'Gross'];
+const STUFEN_GROESSE = [0, 0.4, 0.75, 1]; // so gross wird die Figur gezeichnet (0 = Baby, 1 = gross)
 
-// 0 = neugeboren, 1 = Baby, 2 = Kätzchen, 3 = junge Katze, 4 = gross
+// 0 = Baby, 1 = Kätzchen, 2 = junge Katze, 3 = gross
 export function stufeFuerMilch(milch, bisGross) {
-  if (milch >= bisGross) return 4;
-  if (milch <= 0) return 0;
-  const anteil = milch / bisGross;
-  if (anteil < 1 / 3) return 1;
-  if (anteil < 2 / 3) return 2;
-  return 3;
+  if (milch >= bisGross) return 3;
+  const anteil = Math.max(0, milch) / bisGross;
+  if (anteil < 1 / 3) return 0;
+  if (anteil < 2 / 3) return 1;
+  return 2;
 }
+export const groesseFuerMilch = (milch, bisGross) => STUFEN_GROESSE[stufeFuerMilch(milch, bisGross)];
+// So viel Milch braucht es bis zum Anfang einer Stufe
+export const milchFuerStufe = (stufe, bisGross) => Math.ceil((bisGross * Math.min(stufe, 3)) / 3);
 
 // ---------- Zeit in Zürich ----------
 
@@ -86,11 +89,11 @@ export function glaeserBisZiel(ml) {
 }
 
 // Wie viel Milch bekommt das Kätzchen jetzt? (Es wird beim Trinken automatisch gefüttert.)
-// Milch gibt es nur für heute getrunkenes Wasser, höchstens 3 l pro Tag,
-// und nicht mehr, als es bis zum Grosswerden noch braucht.
+// Jedes heute getrunkene Wasser gibt gleich viel Milch, ohne Grenze pro Tag (Tagesziel bleibt 2 l),
+// aber nicht mehr, als es bis zum Grosswerden noch braucht.
 export function milchPortion({ heuteGetrunken, heuteGefuettert, milch, bisGross }) {
   const offen = Math.max(0, heuteGetrunken - heuteGefuettert);
-  return Math.max(0, Math.min(offen, MILCH_MAX_ML - heuteGefuettert, bisGross - milch));
+  return Math.max(0, Math.min(offen, bisGross - milch));
 }
 
 // ---------- Plan und Hunger ----------

@@ -453,7 +453,8 @@ function konfetti(hoehe, nr) {
 
 // ---------- Ganze Katze ----------
 
-export function zeichneKatze({ art, groesse = 1, zustand = 'gluecklich', pose = 'sitzen', effekte = true }) {
+// feiern: Konfetti und Sterne, z. B. wenn die Katze eine neue Stufe erreicht
+export function zeichneKatze({ art, groesse = 1, zustand = 'gluecklich', pose = 'sitzen', effekte = true, feiern = false }) {
   const id = `k${++zaehler}`;
   const f = art.farben;
   const fig = art.figur;
@@ -535,7 +536,7 @@ export function zeichneKatze({ art, groesse = 1, zustand = 'gluecklich', pose = 
     <ellipse cx="0" cy="0" rx="${r1(46 * s)}" ry="${r1(7 * s)}" fill="#1E4A10" opacity=".18"/>
     <g transform="scale(${r1(s * 1000) / 1000})"><g class="k-atmen">${figur}</g></g>`;
 
-  if (effekte && zustand === 'fertig') {
+  if (effekte && (zustand === 'fertig' || feiern)) {
     const sterne = [[-70, -hoehe * 0.7, 1], [66, -hoehe * 0.85, 1.2], [-46, -hoehe - 6, 0.8], [80, -hoehe * 0.35, 0.9], [-84, -hoehe * 0.25, 0.7]];
     sterne.forEach(([x, y, gr], i) => { svg += funkelStern(x, y, gr, i); });
     svg += konfetti(hoehe, zaehler);

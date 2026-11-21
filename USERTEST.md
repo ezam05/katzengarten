@@ -57,7 +57,11 @@ Herausfinden, ob eine Person, die die App zum ersten Mal sieht, ohne Erklärung 
 - Einladen steht bei der Beispiel-Freundin oben
 - Hinweis «Streichel mich mal! 🐾» beim Antippen
 
-## Offene Fragen an Elyna
+## Antworten von Elyna (21.11.2026)
+
+1. Keine Grenze, Tagesziel 2 l → umgesetzt · 2. Zurückholen mit 4 Münzen, Streak ist weg → umgesetzt · 3. «Kann man eine UCC ID machen» → in Klärung · 4. Immer aktuell → braucht Server, in Klärung · 5. Ja → erster Start umgesetzt · 6. Ja → Demo versteckt (3× auf das Holzschild) · 7. Ja, 1 Münze reicht · 8. In Stufen → umgesetzt · 9. «Nein, nur Wasser» → in Klärung
+
+## Offene Fragen an Elyna (Stand vor den Antworten)
 
 1. **Grenze pro Tag:** 2 l ist nicht mehr die Grenze, jetzt zählt Milch bis 3 l pro Tag. Soll es gar keine Grenze geben? Mehr als etwa 3 l Wasser am Tag ist normalerweise nicht nötig.
 2. **Abhauen:** Ist «unter 1 l an einem Tag oder zwei Tage unter 1,5 l» zu streng, besonders für eine Katze, die schon 25 von 30 Tagen gewachsen ist? Kann man sie zurückholen (z. B. 2 Tage gut trinken, dann kommt sie zurück)?

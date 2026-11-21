@@ -1,12 +1,12 @@
 // Kurzer Selbsttest der Rechenregeln. Starten mit: node tests/regeln.test.mjs
 import assert from 'node:assert/strict';
-import { milchPortion, rechneTagAb, hautAb, katzenZustand, stufeFuerMilch, tagesSchluessel, zuerichZuMs } from '../js/regeln.js';
+import { milchPortion, rechneTagAb, hautAb, katzenZustand, groesseFuerMilch, milchFuerStufe, stufeFuerMilch, tagesSchluessel, zuerichZuMs } from '../js/regeln.js';
 
-// Milch nur für heute getrunkenes Wasser, höchstens 3 l pro Tag (2 l ist nicht die Grenze), nicht mehr als nötig
+// Milch für heute getrunkenes Wasser, ohne Grenze pro Tag, nicht mehr als nötig
 assert.equal(milchPortion({ heuteGetrunken: 500, heuteGefuettert: 0, milch: 0, bisGross: 14000 }), 500);
 assert.equal(milchPortion({ heuteGetrunken: 500, heuteGefuettert: 500, milch: 500, bisGross: 14000 }), 0);
 assert.equal(milchPortion({ heuteGetrunken: 2500, heuteGefuettert: 2000, milch: 0, bisGross: 14000 }), 500);
-assert.equal(milchPortion({ heuteGetrunken: 4000, heuteGefuettert: 2500, milch: 0, bisGross: 14000 }), 500);
+assert.equal(milchPortion({ heuteGetrunken: 4000, heuteGefuettert: 2500, milch: 0, bisGross: 14000 }), 1500);
 assert.equal(milchPortion({ heuteGetrunken: 2000, heuteGefuettert: 0, milch: 13800, bisGross: 14000 }), 200);
 
 // Abrechnung: 2 l = Streak + Münze, 1,25–2 l = Streak bleibt, darunter Streak weg
@@ -24,7 +24,12 @@ assert.equal(rechneTagAb({ streak: 3, muenzen: 1, vortagMl: null }, 500, false).
 
 // Stufen und Tageswechsel um 4 Uhr
 assert.equal(stufeFuerMilch(0, 14000), 0);
-assert.equal(stufeFuerMilch(14000, 14000), 4);
+assert.equal(stufeFuerMilch(4666, 14000), 0);
+assert.equal(stufeFuerMilch(4667, 14000), 1);
+assert.equal(stufeFuerMilch(9334, 14000), 2);
+assert.equal(stufeFuerMilch(14000, 14000), 3);
+assert.equal(groesseFuerMilch(7000, 14000), 0.4);
+assert.equal(milchFuerStufe(1, 14000), 4667);
 assert.equal(tagesSchluessel(zuerichZuMs(2026, 11, 21, 3, 59)), '2026-11-20');
 assert.equal(tagesSchluessel(zuerichZuMs(2026, 11, 21, 4, 0)), '2026-11-21');
 

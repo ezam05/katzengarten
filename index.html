@@ -53,8 +53,8 @@
         </g>
       </g>
 
-      <!-- Holzschild mit Wasserstand -->
-      <g>
+      <!-- Holzschild mit Wasserstand (3× schnell antippen: Demo-Knopf zeigen) -->
+      <g id="schild">
         <rect x="52" y="652" width="8" height="48" rx="3" fill="#C99460"/>
         <rect x="52" y="652" width="3" height="48" fill="#DDB07C"/>
         <ellipse cx="56" cy="700" rx="10" ry="3" fill="#1E4A10" opacity=".25"/>
@@ -119,6 +119,7 @@
           <rect x="155" y="714" width="134" height="18" rx="9" fill="#3F8F2B"/>
           <rect id="balken-fuellung" x="155" y="714" width="0" height="18" rx="9" fill="#F5A23A"/>
           <rect x="160" y="716" width="124" height="4" rx="2" fill="#fff" opacity=".22"/>
+          <path d="M199.7 716 V730 M244.3 716 V730" stroke="#fff" stroke-width="1.6" stroke-dasharray="2 2" opacity=".7"/>
           <text id="balken-text" class="t-balken" x="222" y="728" text-anchor="middle">0/14 l</text>
         </g>
         <g id="name-knopf" class="name-knopf" transform="translate(86 709)" role="button" tabindex="0" aria-label="Namen ändern">
@@ -158,7 +159,7 @@
   </div>
 
   <!-- ================= DEMO-LEISTE ================= -->
-  <button class="demo-knopf" type="button" aria-expanded="false" aria-controls="demo-panel">🧪 Demo</button>
+  <button class="demo-knopf" type="button" aria-expanded="false" aria-controls="demo-panel" hidden>🧪 Demo</button>
   <section id="demo-panel" class="demo-panel" hidden aria-label="Demo-Einstellungen">
     <h2><label for="demo-uhr">Uhrzeit: <output id="demo-uhr-text">echt</output></label></h2>
     <input id="demo-uhr" type="range" min="8" max="22" step="0.5" value="12">
@@ -199,8 +200,9 @@
   <!-- Rückgängig (5 Sekunden nach dem Eintragen) -->
   <button class="rueckgaengig" id="rueckgaengig" type="button" hidden>↶ Rückgängig</button>
 
-  <!-- Knopf, wenn die Katze gross ist -->
+  <!-- Knopf, wenn die Katze gross ist oder abgehauen -->
   <button class="aktion-knopf" id="aktion-knopf" type="button" hidden></button>
+  <button class="aktion-zweit" id="aktion-zweit" type="button" hidden></button>
 
   <!-- ================= UNTERE LEISTE ================= -->
   <nav class="unten" aria-label="Hauptmenü">
@@ -295,6 +297,26 @@
       </header>
       <p class="laden-hinweis">Jeder Tag mit 2 Litern gibt 1 🪙. Freigeschaltete Katzen kommen als Baby zu dir und werden mit Milch gross.</p>
       <div class="laden-raster" id="laden-raster"></div>
+    </section>
+  </div>
+
+  <!-- ================= WILLKOMMEN (erster Start) ================= -->
+  <div class="unterblatt-huelle" id="willkommen" hidden>
+    <div class="unterblatt-hintergrund"></div>
+    <section class="unterblatt willkommen-blatt" role="dialog" aria-modal="true" aria-labelledby="willkommen-titel">
+      <div class="griff" aria-hidden="true"></div>
+      <h2 id="willkommen-titel">Willkommen im Katzengarten 🐾</h2>
+      <ol class="willkommen-schritte">
+        <li><span aria-hidden="true">💧</span> Trink Wasser und trag es mit dem Tropfen ein.</li>
+        <li><span aria-hidden="true">🍼</span> Dein Kätzchen bekommt gleich viel Milch und wächst: Baby → Kätzchen → junge Katze → gross.</li>
+        <li><span aria-hidden="true">🏡</span> Ist es gross, zieht es in deinen Katzengarten.</li>
+        <li><span aria-hidden="true">🧳</span> Trinkst du zu wenig, haut es ab.</li>
+      </ol>
+      <label class="feld">Wie heisst du?<input id="w-name" type="text" maxlength="20" autocomplete="given-name" placeholder="Dein Name"></label>
+      <p class="feld-titel" id="w-auswahl-titel">Wähle dein erstes Kätzchen</p>
+      <div class="w-auswahl" id="w-auswahl" role="radiogroup" aria-labelledby="w-auswahl-titel"></div>
+      <label class="feld">Wie heisst dein Kätzchen?<input id="w-katze" type="text" maxlength="14"></label>
+      <button class="anstupsen-knopf" id="w-los" type="button">Los geht's 🐾</button>
     </section>
   </div>
 
