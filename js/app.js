@@ -2336,7 +2336,9 @@ async function abgleichen() {
     if (warWeg) spaeterHochladen(); // Server ist wieder da: Stand nachliefern
     if (liste?.length) {
       spielenEnde(); // Neues von der Uhr
-      for (const e of liste) daten.eintraege.push({ ml: e.ml, zeit: Math.min(e.zeit, Date.now()) });
+      // Demo-Uhr (vorgestellte Tage) gilt auch für Wasser von der Uhr, sonst landet es im falschen Tag
+      const versatz = (daten.demoVersatz || 0) * TAG_MS;
+      for (const e of liste) daten.eintraege.push({ ml: e.ml, zeit: Math.min(e.zeit + versatz, jetzt()) });
       literMuenzenAbgleichen();
       const portion = fuettereAutomatisch();
       speichern();
