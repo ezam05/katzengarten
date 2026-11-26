@@ -2,7 +2,7 @@
 // Netz zuerst: online immer der neuste Stand. Ohne Netz kommt die zuletzt gespeicherte Kopie.
 // Anfragen an den Server (api/) werden nie gespeichert.
 
-const CACHE = 'katzengarten-v2';
+const CACHE = 'katzengarten-v3';
 const START = [
   './', 'index.html', 'uhr.html', 'manifest.webmanifest', 'css/style.css',
   'js/app.js', 'js/arten.js', 'js/katze.js', 'js/regeln.js', 'js/ton.js',
@@ -38,7 +38,7 @@ self.addEventListener('fetch', (e) => {
   );
 });
 
-// Mitteilung, wenn eine Freundin anstupst (api/push.js)
+// Mitteilung, wenn eine Freundin anstupst (api/push.js) oder die Katze erinnert (api/erinnern.js)
 self.addEventListener('push', (e) => {
   let d = {};
   try { d = e.data?.json() || {}; } catch { d = { text: e.data?.text() }; }
@@ -46,7 +46,7 @@ self.addEventListener('push', (e) => {
     body: d.text || 'Trink was! Dein Kätzchen wartet auf Milch 🍼',
     icon: 'bilder/icons/icon-192.png',
     badge: 'bilder/icons/icon-192.png',
-    tag: 'anstupsen',
+    tag: d.tag || 'anstupsen',
     renotify: true,
   }));
 });

@@ -157,7 +157,7 @@
       <svg id="freundin-mini" viewBox="-58 -120 116 124" aria-hidden="true"></svg>
     </button>
     <button class="rund-knopf ton-knopf" id="ton-knopf" type="button" aria-label="Ton ausschalten">🔊</button>
-    <button class="rund-knopf uhr-knopf" id="uhr-knopf" type="button" aria-label="Apple Watch und Widget">
+    <button class="rund-knopf uhr-knopf" id="uhr-knopf" type="button" aria-label="Uhr, Widget und Erinnerungen">
       <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="2" width="10" height="4" rx="1.5" fill="currentColor"/><rect x="7" y="18" width="10" height="4" rx="1.5" fill="currentColor"/><rect x="4.5" y="5" width="15" height="14" rx="4.5" fill="currentColor"/><path d="M12 9 V12.5 L14.5 14" stroke="#fff" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg>
     </button>
   </div>
@@ -295,8 +295,8 @@
         <h2 id="freunde-titel">🐾 Freunde</h2>
         <button class="schliessen-knopf" type="button" data-schliessen aria-label="Freunde schliessen">✕</button>
       </header>
-      <button class="zweit-knopf" id="mitteilungen-knopf" type="button">🔔 Mitteilungen einschalten</button>
-      <p class="laden-hinweis mitteilungen-hinweis" id="mitteilungen-hinweis">Dann bekommst du eine Mitteilung, wenn dich eine Freundin anstupst.</p>
+      <button class="zweit-knopf mitteilungen-knopf" type="button">🔔 Mitteilungen einschalten</button>
+      <p class="laden-hinweis mitteilungen-hinweis">Dann erinnert dich deine Katze ans Trinken, und Freundinnen können dich anstupsen.</p>
       <div class="freunde-liste" id="freunde-liste" aria-live="polite"></div>
       <div class="freunde-leer" id="freunde-leer" hidden>
         <p>Noch niemand da. Lade jemanden ein!</p>
@@ -339,13 +339,17 @@
     <section class="unterblatt" role="dialog" aria-modal="true" aria-labelledby="geraete-titel">
       <div class="griff" aria-hidden="true"></div>
       <header class="unterblatt-kopf">
-        <h2 id="geraete-titel">⌚ Uhr und 📱 Widget</h2>
+        <h2 id="geraete-titel">⌚ Uhr, Widget, Erinnern</h2>
         <button class="schliessen-knopf" type="button" data-schliessen aria-label="Schliessen">✕</button>
       </header>
-      <h3 class="geraete-titel">Apple Watch</h3>
+      <h3 class="geraete-titel">🔔 Erinnerungen</h3>
+      <p class="laden-hinweis">Hast du 5 Stunden nichts getrunken und liegst hinter dem Plan, meldet sich deine Katze: «Ich hab Hunger auf Milch 🥺» (nur 8–22 Uhr).</p>
+      <button class="zweit-knopf mitteilungen-knopf" type="button">🔔 Mitteilungen einschalten</button>
+      <p class="laden-hinweis mitteilungen-hinweis">Dann erinnert dich deine Katze ans Trinken, und Freundinnen können dich anstupsen.</p>
+      <h3 class="geraete-titel">⌚ Apple Watch</h3>
       <p class="laden-hinweis">Deine Katze und wie viel du noch trinken musst, direkt auf der Uhr. Du kannst dort auch Wasser eintragen. Schick dir den Link selbst und tipp ihn auf der Uhr in Nachrichten an.</p>
       <button class="anstupsen-knopf" id="uhr-schicken" type="button">⌚ Link für die Uhr schicken</button>
-      <h3 class="geraete-titel">Widget für den Startbildschirm</h3>
+      <h3 class="geraete-titel">📱 Widget für den Startbildschirm</h3>
       <ol class="geraete-schritte">
         <li>Lade die Gratis-App <strong>Scriptable</strong> aus dem App Store und leg das Script <a href="widget/Katzengarten.js" target="_blank" rel="noopener">«Katzengarten»</a> darin an.</li>
         <li>Kopier deinen Widget-Code und öffne das Script einmal in Scriptable. Es fragt nach dem Code.</li>

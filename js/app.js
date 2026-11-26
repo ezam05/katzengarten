@@ -2107,6 +2107,7 @@ function oeffneGeraete() {
   geraete.zurueckFokus = document.activeElement;
   faecher(false);
   $('#widget-code').textContent = daten.konto.id;
+  zeichneMitteilungen();
   hochladen(); // damit das Widget gleich Daten findet
   geraete.huelle.hidden = false;
   geraete.huelle.querySelector('.schliessen-knopf').focus();
@@ -2319,7 +2320,7 @@ async function api(pfad, optionen = {}) {
 function standInhalt(name) {
   const k = daten.katze;
   return {
-    v: 1, i: daten.konto.id, n: name, t: jetzt(), h: heuteMl(), st: daten.streak,
+    v: 1, i: daten.konto.id, n: name, t: jetzt(), h: heuteMl(), lt: letzteTrinkZeit(), st: daten.streak, // lt: für die Erinnerung (api/erinnern.js)
     k: { n: k.name, a: k.artId, m: k.milch, s: k.status },
     g: daten.garten.map((e) => [e.artId, e.name, e.datum]),
   };
@@ -2635,14 +2636,16 @@ async function meinAbo() {
 
 async function zeichneMitteilungen() {
   const an = !!(await meinAbo());
-  const knopf = $('#mitteilungen-knopf');
-  knopf.textContent = an ? '🔔 Mitteilungen sind an' : '🔔 Mitteilungen einschalten';
-  knopf.disabled = an;
-  $('#mitteilungen-hinweis').textContent = an
-    ? 'Wenn dich eine Freundin anstupst, bekommst du eine Mitteilung.'
+  const hinweis = an
+    ? 'Deine Katze erinnert dich ans Trinken, und Freundinnen können dich anstupsen.'
     : istIphone && !vomHomeBildschirm
       ? 'Auf dem iPhone geht das nur, wenn Katzengarten auf dem Home-Bildschirm liegt: Teilen → «Zum Home-Bildschirm», dann von dort öffnen.'
-      : 'Dann bekommst du eine Mitteilung, wenn dich eine Freundin anstupst.';
+      : 'Dann erinnert dich deine Katze ans Trinken, und Freundinnen können dich anstupsen.';
+  document.querySelectorAll('.mitteilungen-knopf').forEach((knopf) => {
+    knopf.textContent = an ? '🔔 Mitteilungen sind an' : '🔔 Mitteilungen einschalten';
+    knopf.disabled = an;
+  });
+  document.querySelectorAll('.mitteilungen-hinweis').forEach((p) => { p.textContent = hinweis; });
 }
 
 async function aboSchicken(abo) {
@@ -2666,14 +2669,14 @@ async function mitteilungenEinschalten() {
     const abo = await reg.pushManager.getSubscription()
       || await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: base64ZuBytes(schluessel) });
     await aboSchicken(abo);
-    zeigeMeldung('🔔 Mitteilungen sind an. Freundinnen können dich jetzt anstupsen.', false);
+    zeigeMeldung('🔔 Mitteilungen sind an. Deine Katze erinnert dich, und Freundinnen können dich anstupsen.', false);
   } catch {
     zeigeMeldung('Das hat nicht geklappt 😿 Hast du Internet?', false);
   }
   zeichneMitteilungen();
 }
 
-$('#mitteilungen-knopf').addEventListener('click', mitteilungenEinschalten);
+document.querySelectorAll('.mitteilungen-knopf').forEach((k) => k.addEventListener('click', mitteilungenEinschalten));
 // Abos können sich ändern: beim Start das aktuelle nochmals melden
 meinAbo().then((abo) => { if (abo) aboSchicken(abo).catch(() => {}); });
 

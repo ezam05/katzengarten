@@ -14,7 +14,7 @@ const DIENSTE = [/\.googleapis\.com$/, /\.push\.apple\.com$/, /\.mozilla\.com$/,
 // austauschbar für die Prüfungen (tests/api.test.mjs)
 export const versand = { senden: (abo, text, optionen) => webpush.sendNotification(abo, text, optionen) };
 
-async function schluessel() {
+export async function schluessel() {
   let text = await befehl('GET', 'vapid');
   if (!text) {
     await befehl('SET', 'vapid', JSON.stringify(webpush.generateVAPIDKeys()), 'NX');

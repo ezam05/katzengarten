@@ -702,7 +702,7 @@ button:focus-visible, [tabindex]:focus-visible {
 .w-fehler[hidden] { display: none; }
 
 /* Mitteilungen (Freunde-Blatt) */
-#mitteilungen-knopf:disabled { border-color: #CFE8C4; color: #2F7A2F; background: #F1FAEC; cursor: default; }
+.mitteilungen-knopf:disabled { border-color: #CFE8C4; color: #2F7A2F; background: #F1FAEC; cursor: default; }
 .mitteilungen-hinweis { margin: 6px 4px 12px; font-size: 13px; text-align: center; }
 
 /* Uhr und Widget */
@@ -713,6 +713,7 @@ button:focus-visible, [tabindex]:focus-visible {
   font-size: 17px;
   color: var(--text-dunkel);
 }
+.geraete-titel:first-of-type { margin-top: 10px; }
 .geraete-schritte { margin: 8px 0 12px; padding-left: 22px; font-size: 14px; line-height: 1.45; color: #55616B; }
 .geraete-schritte li + li { margin-top: 6px; }
 .geraete-schritte a { color: #1C6FAE; font-weight: 700; }

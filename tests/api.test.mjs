@@ -14,6 +14,7 @@ globalThis.fetch = async (_url, { body }) => {
   else if (cmd === 'DEL') { result = db.delete(k) ? 1 : 0; }
   else if (cmd === 'RPUSH') { db.set(k, [...(db.get(k) || []), a[0]]); result = db.get(k).length; }
   else if (cmd === 'LTRIM') { db.set(k, (db.get(k) || []).slice(Number(a[0]))); result = 'OK'; }
+  else if (cmd === 'LRANGE') result = [...(db.get(k) || [])];
   else if (cmd === 'LPOP') { const l = db.get(k) || []; result = l.length ? l.splice(0, Number(a[0])) : null; }
   else if (cmd === 'EXPIRE') result = 1;
   else if (cmd === 'SADD') { const m = db.get(k) || new Set(); a.forEach((x) => m.add(x)); db.set(k, m); result = 1; }
@@ -88,5 +89,36 @@ assert.equal((await anfrage(push, 'POST', { body: { id: id2, geheim: g2, aktion:
 assert.equal(db.has(`push:${id}`), false);
 assert.equal((await anfrage(push, 'POST', { body: { id: id2, geheim: g2, aktion: 'ab' } })).code, 200);
 assert.equal(db.has(`push:${id2}`), false);
+
+// Erinnerung «Ich hab Hunger auf Milch»: nur mit Abo, 5 h nichts getrunken, hinter dem Plan, 8–22 Uhr, höchstens alle 3 h
+const { default: erinnernHandler, erinnern } = await import('../api/erinnern.js');
+const { zeitImTag, tagesSchluessel: tag } = await import('../js/regeln.js');
+const heuteTag = tag(Date.now());
+const um = (h) => zeitImTag(heuteTag, h);
+const id4 = randomUUID(), g4 = randomUUID();
+await anfrage(stand, 'POST', { body: { id: id4, geheim: g4, stand: { v: 1, n: 'Lia', t: um(9), h: 250, lt: um(9), k: { n: 'Mochi', a: 'toast', m: 0, s: 'waechst' } } } });
+await anfrage(push, 'POST', { body: { id: id4, geheim: g4, aktion: 'abo', abo } });
+geschickt.length = 0;
+assert.equal((await erinnern(um(13))).geschickt, 0, 'erst 4 h seit dem letzten Glas');
+assert.equal((await erinnern(um(14.5))).geschickt, 1, '5,5 h nichts getrunken, hinter dem Plan');
+assert.equal(geschickt.at(-1).text.titel, 'Mochi 🥺');
+assert.ok(geschickt.at(-1).text.text.includes('Noch 1,8 l'));
+assert.equal((await erinnern(um(15))).geschickt, 0, 'höchstens alle 3 Stunden');
+db.delete(`erinnert:${id4}`);
+assert.equal((await erinnern(um(23))).geschickt, 0, 'nachts nie');
+// Wasser von der Uhr (noch nicht abgeholt) zählt als Getränk
+await anfrage(trinken, 'POST', { body: { id: id4, geheim: g4, aktion: 'eintragen', ml: 500 } });
+db.set(`trinken:${id4}`, [JSON.stringify({ ml: 500, zeit: um(14) })]);
+assert.equal((await erinnern(um(16))).geschickt, 0, 'Uhr-Glas um 14 Uhr zählt');
+db.delete(`trinken:${id4}`);
+// abgehauene Katze erinnert nicht
+await anfrage(stand, 'POST', { body: { id: id4, geheim: g4, stand: { v: 1, n: 'Lia', t: um(9), h: 0, k: { n: 'Mochi', a: 'toast', m: 0, s: 'weg' } } } });
+assert.equal((await erinnern(um(16))).geschickt, 0, 'abgehauen: keine Erinnerung');
+// Zugang: erstes Passwort gilt, danach nur dieses
+const mitPw = (pw) => ({ method: 'POST', headers: { authorization: `Bearer ${pw}` } });
+const lauf = async (pw) => { let code; await erinnernHandler(mitPw(pw), { setHeader() {}, status(c) { code = c; return this; }, json() {} }); return code; };
+assert.equal(await lauf('kurz'), 403);
+assert.equal(await lauf('a'.repeat(32)), 200);
+assert.equal(await lauf('b'.repeat(32)), 403, 'anderes Passwort');
 
 console.log('Server-Funktionen stimmen ✓');
