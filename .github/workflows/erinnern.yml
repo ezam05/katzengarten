@@ -11,4 +11,7 @@ jobs:
     timeout-minutes: 2
     steps:
       - name: Katzen erinnern
-        run: curl -fsS -X POST https://katzengarten.vercel.app/api/erinnern -H "Authorization: Bearer ${{ secrets.ERINNERN_GEHEIM }}"
+        env:
+          GEHEIM: ${{ secrets.ERINNERN_GEHEIM }}
+        run: |
+          curl -fsS -X POST https://katzengarten.vercel.app/api/erinnern -H "Authorization: Bearer $GEHEIM"
