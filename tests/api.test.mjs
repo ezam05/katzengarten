@@ -10,7 +10,8 @@ globalThis.fetch = async (_url, { body }) => {
   const [cmd, k, ...a] = JSON.parse(body);
   let result = null;
   if (cmd === 'GET') result = db.get(k) ?? null;
-  else if (cmd === 'SET') { if (!(a.includes('NX') && db.has(k))) db.set(k, a[0]); result = 'OK'; }
+  else if (cmd === 'SET') { if (a.includes('NX') && db.has(k)) result = null; else { db.set(k, a[0]); result = 'OK'; } }
+  else if (cmd === 'DEL') { result = db.delete(k) ? 1 : 0; }
   else if (cmd === 'RPUSH') { db.set(k, [...(db.get(k) || []), a[0]]); result = db.get(k).length; }
   else if (cmd === 'LTRIM') { db.set(k, (db.get(k) || []).slice(Number(a[0]))); result = 'OK'; }
   else if (cmd === 'LPOP') { const l = db.get(k) || []; result = l.length ? l.splice(0, Number(a[0])) : null; }
@@ -62,5 +63,30 @@ assert.deepEqual(Object.keys(mia).sort(), ['aktiv', 'art', 'heuteMl', 'id', 'nam
 assert.equal(mia.name, 'Mia'); assert.equal(mia.stufe, 1); // 10 von 20 l = Kätzchen assert.equal(mia.heuteMl, 750);
 assert.ok(!liste.some((f) => f.id === id3), 'ohne Namen nicht in der Liste');
 assert.ok(!JSON.stringify(liste).includes(geheim) && !JSON.stringify(liste).includes(g2), 'keine geheime Nummer');
+
+// Mitteilungen (Anstupsen): Abo speichern, anstupsen, Pause, abgelaufenes Abo, fremde Adressen abweisen
+const { default: push, versand } = await import('../api/push.js');
+const geschickt = [];
+versand.senden = async (abo, text) => { if (abo.endpoint.includes('abgelaufen')) throw Object.assign(new Error('weg'), { statusCode: 410 }); geschickt.push({ abo, text: JSON.parse(text) }); };
+const schl = await anfrage(push, 'GET', { query: { aktion: 'schluessel' } });
+assert.equal(schl.code, 200); assert.ok(schl.daten.schluessel.length > 40);
+assert.equal((await anfrage(push, 'GET', { query: { aktion: 'schluessel' } })).daten.schluessel, schl.daten.schluessel, 'Schlüssel bleibt gleich');
+const abo = { endpoint: 'https://fcm.googleapis.com/fcm/send/abc', keys: { p256dh: 'p', auth: 'a' } };
+assert.equal((await anfrage(push, 'POST', { body: { id: id2, geheim: g2, aktion: 'abo', abo: { ...abo, endpoint: 'https://boese.example.com/x' } } })).code, 400, 'nur bekannte Dienste');
+assert.equal((await anfrage(push, 'POST', { body: { id: id2, geheim: randomUUID(), aktion: 'abo', abo } })).code, 403);
+assert.equal((await anfrage(push, 'POST', { body: { id, geheim, aktion: 'stupsen', an: id2 } })).daten.grund, 'kein-abo');
+assert.equal((await anfrage(push, 'POST', { body: { id: id2, geheim: g2, aktion: 'abo', abo } })).code, 200);
+const stups = await anfrage(push, 'POST', { body: { id, geheim, aktion: 'stupsen', an: id2 } });
+assert.equal(stups.daten.ok, true);
+assert.equal(geschickt.length, 1);
+assert.equal(geschickt[0].text.titel, 'Elyna stupst dich an 💧', 'Name kommt vom Server');
+assert.equal((await anfrage(push, 'POST', { body: { id, geheim, aktion: 'stupsen', an: id2 } })).code, 429, '30 Minuten Pause');
+assert.equal((await anfrage(push, 'POST', { body: { id, geheim, aktion: 'stupsen', an: id } })).code, 400, 'nicht sich selbst');
+// abgelaufenes Abo wird gelöscht
+await anfrage(push, 'POST', { body: { id, geheim, aktion: 'abo', abo: { ...abo, endpoint: 'https://fcm.googleapis.com/fcm/send/abgelaufen' } } });
+assert.equal((await anfrage(push, 'POST', { body: { id: id2, geheim: g2, aktion: 'stupsen', an: id } })).daten.grund, 'kein-abo');
+assert.equal(db.has(`push:${id}`), false);
+assert.equal((await anfrage(push, 'POST', { body: { id: id2, geheim: g2, aktion: 'ab' } })).code, 200);
+assert.equal(db.has(`push:${id2}`), false);
 
 console.log('Server-Funktionen stimmen ✓');

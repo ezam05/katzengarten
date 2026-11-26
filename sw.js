@@ -2,7 +2,7 @@
 // Netz zuerst: online immer der neuste Stand. Ohne Netz kommt die zuletzt gespeicherte Kopie.
 // Anfragen an den Server (api/) werden nie gespeichert.
 
-const CACHE = 'katzengarten-v1';
+const CACHE = 'katzengarten-v2';
 const START = [
   './', 'index.html', 'uhr.html', 'manifest.webmanifest', 'css/style.css',
   'js/app.js', 'js/arten.js', 'js/katze.js', 'js/regeln.js', 'js/ton.js',
@@ -36,4 +36,26 @@ self.addEventListener('fetch', (e) => {
       .catch(async () => (await caches.match(e.request, { ignoreSearch: true }))
         || (e.request.mode === 'navigate' ? caches.match('index.html') : Response.error())),
   );
+});
+
+// Mitteilung, wenn eine Freundin anstupst (api/push.js)
+self.addEventListener('push', (e) => {
+  let d = {};
+  try { d = e.data?.json() || {}; } catch { d = { text: e.data?.text() }; }
+  e.waitUntil(self.registration.showNotification(d.titel || 'Katzengarten 💧', {
+    body: d.text || 'Trink was! Dein Kätzchen wartet auf Milch 🍼',
+    icon: 'bilder/icons/icon-192.png',
+    badge: 'bilder/icons/icon-192.png',
+    tag: 'anstupsen',
+    renotify: true,
+  }));
+});
+
+// Antippen der Mitteilung öffnet die App (oder holt sie nach vorne)
+self.addEventListener('notificationclick', (e) => {
+  e.notification.close();
+  e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((fenster) => {
+    const offen = fenster.find((f) => f.url.startsWith(self.registration.scope));
+    return offen ? offen.focus() : self.clients.openWindow('./');
+  }));
 });

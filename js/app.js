@@ -1960,7 +1960,7 @@ function zeichneAnstupsKnopf() {
   }
   freundinUi.hinweis.textContent = fr.beispiel
     ? ''
-    : `${fr.name} bekommt: «${daten.name || 'Deine Freundin'} stupst dich an: Trink was! 💧»`;
+    : `${fr.name} bekommt eine Mitteilung (oder du schickst ihr eine Nachricht): «${daten.name || 'Deine Freundin'} stupst dich an 💧 Trink was!»`;
 }
 
 function oeffneFreundin() {
@@ -1988,7 +1988,21 @@ async function anstupsen() {
   }
   const name = meinName();
   if (!name) return;
-  // ohne Server geht das Anstupsen als Nachricht (z. B. über Nachrichten oder WhatsApp)
+  const gestupst = () => { daten.angestupstUm = jetzt(); speichern(); zeichneAnstupsKnopf(); };
+  // 1. als Mitteilung über den Server (wenn die Freundin Mitteilungen eingeschaltet hat)
+  if (fr.id) {
+    try {
+      const r = await api('push', { method: 'POST', body: JSON.stringify({ id: daten.konto.id, geheim: daten.konto.geheim, aktion: 'stupsen', an: fr.id }) });
+      if (r.ok) {
+        zeigeMeldung(`Du hast ${fr.name} angestupst 🔔 Sie bekommt eine Mitteilung.`, false);
+        gestupst();
+        return;
+      }
+    } catch (e) {
+      if (String(e.message).includes('429')) { zeigeMeldung(`Du hast ${fr.name} gerade erst angestupst 💧`, false); gestupst(); return; }
+    }
+  }
+  // 2. sonst als Nachricht (z. B. über Nachrichten oder WhatsApp)
   const geschickt = await teilen({
     titel: 'Anstupsen 💧',
     text: `${name} stupst dich an: Trink was! 💧 ${fr.katzenName} wartet auf Milch.`,
@@ -2528,6 +2542,7 @@ function oeffneFreunde() {
   freunde.huelle.querySelector('.schliessen-knopf').focus();
   hochladen(); // damit ich selbst als «gerade da» gelte
   ladeFreunde();
+  zeichneMitteilungen();
   clearInterval(freunde.timer);
   freunde.timer = setInterval(ladeFreunde, FREUNDE_NEU_MS); // solange offen: alle 30 s neu
 }
@@ -2601,5 +2616,66 @@ document.addEventListener('visibilitychange', () => {
   if (!document.hidden) { abrechnen(); zeichne(); abgleichen(); }
   else if (hochladenTimer) hochladen(); // App geht zu: letzte Änderung sofort hochladen
 });
+// ---------- Mitteilungen: Anstupsen kommt als Mitteilung aufs Handy (api/push.js, sw.js) ----------
+// Auf dem iPhone geht das nur, wenn die App vom Home-Bildschirm geöffnet wird (ab iOS 16.4).
+
+const istIphone = /iPhone|iPad|iPod/.test(navigator.userAgent);
+const vomHomeBildschirm = matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+const kannMitteilungen = () => 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+
+function base64ZuBytes(b64) {
+  const s = atob((b64 + '='.repeat((4 - (b64.length % 4)) % 4)).replace(/-/g, '+').replace(/_/g, '/'));
+  return Uint8Array.from(s, (c) => c.charCodeAt(0));
+}
+
+async function meinAbo() {
+  if (!kannMitteilungen() || Notification.permission !== 'granted') return null;
+  try { return await (await navigator.serviceWorker.getRegistration())?.pushManager.getSubscription(); } catch { return null; }
+}
+
+async function zeichneMitteilungen() {
+  const an = !!(await meinAbo());
+  const knopf = $('#mitteilungen-knopf');
+  knopf.textContent = an ? '🔔 Mitteilungen sind an' : '🔔 Mitteilungen einschalten';
+  knopf.disabled = an;
+  $('#mitteilungen-hinweis').textContent = an
+    ? 'Wenn dich eine Freundin anstupst, bekommst du eine Mitteilung.'
+    : istIphone && !vomHomeBildschirm
+      ? 'Auf dem iPhone geht das nur, wenn Katzengarten auf dem Home-Bildschirm liegt: Teilen → «Zum Home-Bildschirm», dann von dort öffnen.'
+      : 'Dann bekommst du eine Mitteilung, wenn dich eine Freundin anstupst.';
+}
+
+async function aboSchicken(abo) {
+  await api('push', { method: 'POST', body: JSON.stringify({ id: daten.konto.id, geheim: daten.konto.geheim, aktion: 'abo', abo: abo.toJSON() }) });
+}
+
+async function mitteilungenEinschalten() {
+  if (!kannMitteilungen()) {
+    zeigeMeldung(istIphone ? 'Leg Katzengarten zuerst auf den Home-Bildschirm (Teilen → «Zum Home-Bildschirm») und öffne es von dort 📲' : 'Dieser Browser kann leider keine Mitteilungen.', false);
+    return;
+  }
+  try {
+    // zuerst fragen, solange das Antippen noch «frisch» ist (sonst blockt der Browser)
+    if (await Notification.requestPermission() !== 'granted') {
+      zeigeMeldung('Mitteilungen sind nicht erlaubt. Du kannst sie in den Einstellungen des Handys einschalten.', false);
+      return;
+    }
+    await hochladen(); // die eigene Nummer muss auf dem Server sein
+    const reg = await navigator.serviceWorker.ready;
+    const { schluessel } = await api('push?aktion=schluessel');
+    const abo = await reg.pushManager.getSubscription()
+      || await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: base64ZuBytes(schluessel) });
+    await aboSchicken(abo);
+    zeigeMeldung('🔔 Mitteilungen sind an. Freundinnen können dich jetzt anstupsen.', false);
+  } catch {
+    zeigeMeldung('Das hat nicht geklappt 😿 Hast du Internet?', false);
+  }
+  zeichneMitteilungen();
+}
+
+$('#mitteilungen-knopf').addEventListener('click', mitteilungenEinschalten);
+// Abos können sich ändern: beim Start das aktuelle nochmals melden
+meinAbo().then((abo) => { if (abo) aboSchicken(abo).catch(() => {}); });
+
 // Ohne Internet starten (sw.js)
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => { /* z. B. privates Fenster */ });

@@ -701,6 +701,10 @@ button:focus-visible, [tabindex]:focus-visible {
 .w-fehler { margin: -4px 0 8px; font-size: 13px; font-weight: 700; color: #C9431F; }
 .w-fehler[hidden] { display: none; }
 
+/* Mitteilungen (Freunde-Blatt) */
+#mitteilungen-knopf:disabled { border-color: #CFE8C4; color: #2F7A2F; background: #F1FAEC; cursor: default; }
+.mitteilungen-hinweis { margin: 6px 4px 12px; font-size: 13px; text-align: center; }
+
 /* Uhr und Widget */
 .geraete-titel {
   margin: 18px 0 0;
