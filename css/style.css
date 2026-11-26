@@ -1222,3 +1222,4 @@ button:focus-visible, [tabindex]:focus-visible {
   .trink-pop { animation-duration: 1.2s; }
   .spritzer { animation: none; opacity: 0; }
 }
+.geraete-schritte .zweit-knopf { margin-top: 8px; }

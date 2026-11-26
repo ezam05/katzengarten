@@ -2133,6 +2133,22 @@ document.addEventListener('keydown', (e) => { if (e.key === 'Escape') schliesseG
 $('#uhr-schicken').addEventListener('click', aufDieUhr);
 $('#widget-code-kopieren').addEventListener('click', widgetCodeKopieren);
 
+// Scriptable-Script in die Zwischenablage (dann in Scriptable mit ＋ einfügen)
+$('#script-kopieren').addEventListener('click', async () => {
+  try {
+    // ClipboardItem mit Promise: Safari erlaubt das Kopieren nur direkt beim Antippen
+    const text = fetch('widget/Katzengarten.js').then((r) => { if (!r.ok) throw new Error(); return r.text(); });
+    if (window.ClipboardItem) {
+      await navigator.clipboard.write([new ClipboardItem({ 'text/plain': text.then((t) => new Blob([t], { type: 'text/plain' })) })]);
+    } else {
+      await navigator.clipboard.writeText(await text);
+    }
+    zeigeMeldung('Script kopiert 📋 Jetzt Scriptable öffnen, ＋ tippen und einfügen.', false);
+  } catch {
+    window.open('widget/Katzengarten.js', '_blank'); // ohne Zwischenablage: Text zum Markieren öffnen
+  }
+});
+
 // ---------- Kollegin: einladen, Katze schicken, Katze der Kollegin übernehmen ----------
 // Jede hat ihre eigene Katze und ihren eigenen Garten (gespeichert auf ihrem Handy).
 // Ohne Server schickt man sich die Katze als Link; wer den Link öffnet, sieht sie unter «Freundin».
