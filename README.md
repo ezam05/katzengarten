@@ -12,9 +12,13 @@ Junge Erwachsene wissen, dass sie etwa 2 Liter Wasser am Tag trinken sollten, un
 
 ## Idee
 
-Katzengarten macht aus Trinken Fürsorge. Jedes Glas Wasser wird zu Milch für ein Kätzchen, das man vom Baby bis zur grossen Katze aufzieht. Wer genug trinkt, sieht es wachsen und sammelt Katzen im eigenen Katzengarten. Wer zu wenig trinkt, dessen Kätzchen haut ab. Freundinnen sehen gegenseitig, wie es ihren Katzen geht, und können sich anstupsen. Das Widget und die Uhr zeigen auf einen Blick, wie viel heute noch fehlt, ohne dass man die App öffnen muss.
+Katzengarten macht aus Trinken Fürsorge. Jedes Glas Wasser wird zu Milch für ein Kätzchen, das man vom Baby bis zur grossen Katze aufzieht. Wer genug trinkt, sieht es wachsen und sammelt Katzen im eigenen Katzengarten. Wer zu wenig trinkt, dessen Kätzchen haut ab.
 
-> Für junge Erwachsene, die im Alltag vergessen, genug zu trinken, entwickle ich eine App, mit der sie ein Kätzchen grossziehen, indem sie Wasser trinken, wenn sie unterwegs, in der Schule oder bei der Arbeit sind.
+Allein ist Trinken langweilig, darum trinkt man zusammen. In der Freunde-Liste sieht man, wie es den Freundinnen geht: wie gross ihre Katze schon ist und ob sie heute noch trinken müssen. So motiviert man sich gegenseitig. Hängt eine Freundin hinterher, stupst man sie an, und sie bekommt eine Nachricht aufs Handy: «Trink was! 💧».
+
+Das Widget auf dem Startbildschirm und die Apple Watch zeigen auf einen Blick, wie viel heute noch fehlt, ohne dass man die App öffnen muss.
+
+> Für junge Erwachsene, die im Alltag vergessen, genug zu trinken, entwickle ich eine App, mit der sie zusammen mit ihren Freundinnen Kätzchen grossziehen, indem sie Wasser trinken und sich gegenseitig anstupsen, wenn sie unterwegs, in der Schule oder bei der Arbeit sind.
 
 **Zielgruppe:** Freundinnen Anfang 20, Handy immer in der Hand, trinken zu wenig.
 **Ziel pro Tag:** 2 Liter Wasser, Tee oder Mineralwasser, verteilt von 8 bis 22 Uhr.
