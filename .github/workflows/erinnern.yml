@@ -1,0 +1,14 @@
+# Alle 30 Minuten prüft der Server, wer ans Trinken erinnert werden muss (api/erinnern.js).
+# Nur 6–21 Uhr UTC, das deckt 8–22 Uhr in Zürich ab (Winter- und Sommerzeit). Der Server prüft die Uhrzeit selbst.
+name: Erinnerungen
+on:
+  schedule:
+    - cron: '*/30 6-21 * * *'
+  workflow_dispatch:
+jobs:
+  erinnern:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Katzen erinnern
+        run: curl -fsS -X POST https://katzengarten.vercel.app/api/erinnern -H "Authorization: Bearer ${{ secrets.ERINNERN_GEHEIM }}"
