@@ -14,7 +14,7 @@ Junge Erwachsene wissen, dass sie etwa 2 Liter Wasser am Tag trinken sollten, un
 
 Katzengarten macht aus Trinken Fürsorge. Jedes Glas Wasser wird zu Milch für ein Kätzchen, das man vom Baby bis zur grossen Katze aufzieht. Wer genug trinkt, sieht es wachsen und sammelt Katzen im eigenen Katzengarten. Wer zu wenig trinkt, dessen Kätzchen haut ab.
 
-Allein ist Trinken langweilig, darum trinkt man zusammen. In der Freunde-Liste sieht man, wie es den Freundinnen geht: wie gross ihre Katze schon ist und ob sie heute noch trinken müssen. So motiviert man sich gegenseitig. Hängt eine Freundin hinterher, stupst man sie an, und sie bekommt eine Nachricht aufs Handy: «Trink was! 💧».
+Allein ist Trinken langweilig, darum trinkt man zusammen. In der Freunde-Liste sieht man, wie es den Freundinnen geht: wie gross ihre Katze schon ist und ob sie heute noch trinken müssen. So motiviert man sich gegenseitig. Hängt eine Freundin hinterher, stupst man sie an, und sie bekommt eine Mitteilung aufs Handy: «Trink was! 💧».
 
 Das Widget auf dem Startbildschirm und die Apple Watch zeigen auf einen Blick, wie viel heute noch fehlt, ohne dass man die App öffnen muss.
 
@@ -26,6 +26,10 @@ Das Widget auf dem Startbildschirm und die Apple Watch zeigen auf einen Blick, w
 ## Weg der Webseite
 
 Entwicklung → GitHub (`ezam05/katzengarten`) → Vercel (Webseite und Server) → App auf dem Handy (iPhone und Android) und Apple Watch → Widget (Scriptable). Alle Nutzerinnen haben eine eigene Nummer, ihr Stand liegt in einer Datenbank (Upstash Redis), damit Freundinnen, Uhr und Widget den gleichen Stand sehen.
+
+## Mitteilungen (Anstupsen)
+
+Im Freunde-Blatt «🔔 Mitteilungen einschalten». Stupst dich danach eine Freundin an, kommt eine Mitteilung der App: «Mia stupst dich an 💧 – Trink was! Kiwi wartet auf Milch 🍼». Antippen öffnet die App. Auf dem iPhone geht das nur, wenn Katzengarten auf dem Home-Bildschirm liegt (ab iOS 16.4). Hat die Freundin keine Mitteilungen eingeschaltet, geht das Anstupsen wie früher als Nachricht über WhatsApp oder Nachrichten. Dieselbe Person kann man höchstens alle 30 Minuten anstupsen. Technik: `api/push.js` (Web Push mit `web-push`, Schlüssel liegen in der Datenbank), `sw.js` zeigt die Mitteilung.
 
 ## Widget
 
@@ -114,6 +118,7 @@ Der Knopf «🧪 Demo» ist versteckt. **3× schnell auf das Holzschild (Wassers
 - **2026-11-21**: «Rückgängig» nimmt auch Milch zurück, falls die Milch von diesem Getränk schon gefüttert war.
 - **2026-11-21**: Daten liegen im Browser (`localStorage`, Name `katzengarten-v1`). Konten und Datenbank kommen mit dem Server-Schritt.
 - **2026-11-26**: Abgabe-Check gegen Auftrag und Bewertungsraster. Neu: Scriptable-Widget (Katze + «noch x Liter», Wunsch Elyna), Blatt «Uhr und Widget» hinter dem Uhr-Knopf (erklärt auch den Weg auf die Uhr), App startet ohne Internet (`sw.js`, Netz zuerst, Server-Anfragen nie gespeichert), Name beim ersten Start nötig, Willkommen erklärt Streicheln und die Zahl am Tropfen, beim allerersten Start zuerst hochladen, dann abgleichen (vorher einmal «falsche Nummer» vom Server). UU II AA bleibt (Wunsch Elyna).
+- **2026-11-26**: Anstupsen als echte Mitteilung (Wunsch Elyna «sodass sie eine Benachrichtigung bekommt»). Web Push über `api/push.js`; die Schlüssel erzeugt der Server selbst und legt sie in der Datenbank ab (keine neuen Einstellungen bei Vercel nötig). Abos nur von bekannten Mitteilungsdiensten (Apple, Google, Mozilla, Microsoft). Der Name in der Mitteilung kommt vom Server, nicht vom Handy, das anstupst. Ohne Abo: Nachricht wie bisher.
 
 ## Stand
 
@@ -130,3 +135,5 @@ Der Knopf «🧪 Demo» ist versteckt. **3× schnell auf das Holzschild (Wassers
 - [x] Ohne Internet (Service Worker `sw.js`, 2026-11-26)
 - [x] Vercel, Nummern und Datenbank, damit Uhr, Freundin und Widget live sind
 - [x] Scriptable-Widget (`widget/Katzengarten.js`, 2026-11-26)
+- [x] Anstupsen als Mitteilung (Web Push, 2026-11-26); auf echten Handys noch zu testen
+- [ ] Erinnerung «Ich hab Hunger auf Milch 🥺» als Mitteilung zur richtigen Zeit (bräuchte einen Zeitplan auf dem Server)
