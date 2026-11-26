@@ -90,6 +90,29 @@ assert.equal(db.has(`push:${id}`), false);
 assert.equal((await anfrage(push, 'POST', { body: { id: id2, geheim: g2, aktion: 'ab' } })).code, 200);
 assert.equal(db.has(`push:${id2}`), false);
 
+// Mehrere Geräte (Handy und Computer): beide bekommen die Mitteilung; abgelaufenes Gerät fällt weg, das andere bleibt
+const idM = randomUUID(), gM = randomUUID();
+await anfrage(stand, 'POST', { body: { id: idM, geheim: gM, stand: { v: 1, n: 'Mara', t: Date.now(), k: { n: 'Nala', a: 'glueck', m: 0, s: 'waechst' } } } });
+const handy = { endpoint: 'https://web.push.apple.com/handy', keys: { p256dh: 'p', auth: 'a' } };
+const computer = { endpoint: 'https://fcm.googleapis.com/fcm/send/computer', keys: { p256dh: 'p', auth: 'a' } };
+await anfrage(push, 'POST', { body: { id: idM, geheim: gM, aktion: 'abo', abo: handy } });
+await anfrage(push, 'POST', { body: { id: idM, geheim: gM, aktion: 'abo', abo: computer } });
+await anfrage(push, 'POST', { body: { id: idM, geheim: gM, aktion: 'abo', abo: computer } }); // gleiches Gerät nochmals: kein Doppel
+assert.equal(JSON.parse(db.get(`push:${idM}`)).length, 2);
+geschickt.length = 0;
+assert.equal((await anfrage(push, 'POST', { body: { id, geheim, aktion: 'stupsen', an: idM } })).daten.ok, true);
+assert.deepEqual(geschickt.map((g) => g.abo.endpoint).sort(), [computer.endpoint, handy.endpoint].sort(), 'beide Geräte');
+// altes Format (ein einzelnes Abo statt Liste) wird weiter gelesen
+db.set(`push:${idM}`, JSON.stringify({ ...handy, endpoint: 'https://web.push.apple.com/abgelaufen' }));
+await anfrage(push, 'POST', { body: { id: idM, geheim: gM, aktion: 'abo', abo: computer } });
+db.delete(`stups:${id}:${idM}`);
+geschickt.length = 0;
+assert.equal((await anfrage(push, 'POST', { body: { id, geheim, aktion: 'stupsen', an: idM } })).daten.ok, true);
+assert.deepEqual(JSON.parse(db.get(`push:${idM}`)).map((a) => a.endpoint), [computer.endpoint], 'abgelaufenes Gerät gelöscht, Computer bleibt');
+// nur dieses Gerät abmelden
+assert.equal((await anfrage(push, 'POST', { body: { id: idM, geheim: gM, aktion: 'ab', endpoint: computer.endpoint } })).code, 200);
+assert.equal(db.has(`push:${idM}`), false);
+
 // Erinnerung «Ich hab Hunger auf Milch»: nur mit Abo, 5 h nichts getrunken, hinter dem Plan, 8–22 Uhr, höchstens alle 3 h
 const { default: erinnernHandler, erinnern } = await import('../api/erinnern.js');
 const { zeitImTag, tagesSchluessel: tag } = await import('../js/regeln.js');

@@ -6,7 +6,7 @@
   <!-- Apple Watch: Seite nicht verkleinern, sie ist schon für die Uhr gebaut -->
   <meta name="disabled-adaptations" content="watch">
   <meta name="theme-color" content="#0B1A12">
-  <title>Katzengarten ⌚</title>
+  <title>Katzengarten</title>
   <link rel="icon" href="bilder/icons/icon-180.png">
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="css/style.css">
@@ -23,6 +23,11 @@
     .knoepfe[hidden] { display: none; }
     .knoepfe button { min-height: 44px; border: 0; border-radius: 22px; background: #1E88D8; color: #fff; font: 600 14px var(--schrift-titel); }
     .knoepfe button:active { transform: scale(.94); }
+    .mitteilung { width: 100%; min-height: 44px; margin: 12px 0 0; border: 0; border-radius: 22px; background: #F2734A; color: #fff; font: 600 15px var(--schrift-titel); cursor: pointer; }
+    .mitteilung:disabled { background: #1F3A28; color: #B9D9C0; cursor: default; }
+    .mitteilung[hidden], #mitteilung-text[hidden] { display: none; }
+    /* Computer: etwas grösser und mit Luft oben */
+    @media (min-width: 500px) { .uhr { max-width: 340px; padding-top: 6vh; } .noch { font-size: 30px; } .klein { font-size: 15px; } }
   </style>
 </head>
 <body>
@@ -33,6 +38,8 @@
   <div class="knoepfe" id="knoepfe" hidden>
     <button type="button" data-ml="100">💧1 dl</button><button type="button" data-ml="250">🥛2,5</button><button type="button" data-ml="500">🍶5 dl</button>
   </div>
+  <button class="mitteilung" id="mitteilung" type="button" hidden>🔔 Erinnerungen auf diesem Gerät</button>
+  <p class="klein" id="mitteilung-text" hidden></p>
   <p class="stand" id="stand"></p>
 </main>
 <script type="module">
@@ -142,6 +149,49 @@
     }
     b.disabled = false;
   });
+
+  // Live: jede Minute (und beim Zurückkommen) den neusten Stand holen, z. B. auf dem Computer
+  if (konto.id) {
+    const neuLaden = async () => { const neu = await vomServer(); if (neu) { k = neu; zeige(); } };
+    setInterval(neuLaden, 60 * 1000);
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) neuLaden(); });
+  }
+
+  // Mitteilungen auf diesem Gerät (z. B. Computer): gleiche Katze wie auf dem Handy, darum über den Link mit den Nummern.
+  // Auf der Uhr gibt es keine Mitteilungen aus dem Browser, dort bleibt der Knopf versteckt.
+  const knopf = document.getElementById('mitteilung');
+  const knopfText = document.getElementById('mitteilung-text');
+  const kannPush = 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+  const sag = (t) => { knopfText.textContent = t; knopfText.hidden = !t; };
+  const zeigeKnopf = (an) => {
+    knopf.disabled = an;
+    knopf.textContent = an ? '🔔 Erinnerungen sind an' : '🔔 Erinnerungen auf diesem Gerät';
+    sag(an ? 'Hast du 5 Stunden nichts getrunken, meldet sich deine Katze auch hier. Antippen öffnet diese Seite.' : 'Dann meldet sich deine Katze auch hier, wenn du trinken sollst.');
+  };
+  const bytes = (b64) => Uint8Array.from(atob((b64 + '='.repeat((4 - (b64.length % 4)) % 4)).replace(/-/g, '+').replace(/_/g, '/')), (c) => c.charCodeAt(0));
+  if (k.live && konto.geheim && kannPush) {
+    const reg = await navigator.serviceWorker.register('sw.js').catch(() => null);
+    if (reg) {
+      knopf.hidden = false;
+      zeigeKnopf(Notification.permission === 'granted' && !!(await reg.pushManager.getSubscription().catch(() => null)));
+      knopf.addEventListener('click', async () => {
+        try {
+          if (await Notification.requestPermission() !== 'granted') { sag('Mitteilungen sind im Browser nicht erlaubt. Du kannst sie in den Einstellungen einschalten.'); return; }
+          const bereit = await navigator.serviceWorker.ready;
+          const { schluessel } = await (await fetch('api/push?aktion=schluessel')).json();
+          const abo = await bereit.pushManager.getSubscription()
+            || await bereit.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: bytes(schluessel) });
+          const r = await fetch('api/push', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: konto.id, geheim: konto.geheim, aktion: 'abo', abo: abo.toJSON() }) });
+          if (!r.ok) throw new Error();
+          // Antippen der Mitteilung soll diese Seite öffnen (die App wäre auf diesem Gerät leer), siehe sw.js
+          await (await caches.open('katzengarten-ziel')).put('ziel', new Response(location.href));
+          zeigeKnopf(true);
+        } catch {
+          sag('Das hat nicht geklappt 😿 Hast du Internet?');
+        }
+      });
+    }
+  }
 
   // Antippen: Katze federt
   document.getElementById('ring').addEventListener('click', () => {

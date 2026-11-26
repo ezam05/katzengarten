@@ -2,7 +2,8 @@
 // Netz zuerst: online immer der neuste Stand. Ohne Netz kommt die zuletzt gespeicherte Kopie.
 // Anfragen an den Server (api/) werden nie gespeichert.
 
-const CACHE = 'katzengarten-v3';
+const CACHE = 'katzengarten-v4';
+const ZIEL = 'katzengarten-ziel'; // Seite, die eine Mitteilung auf diesem Gerät öffnet (uhr.html setzt sie)
 const START = [
   './', 'index.html', 'uhr.html', 'manifest.webmanifest', 'css/style.css',
   'js/app.js', 'js/arten.js', 'js/katze.js', 'js/regeln.js', 'js/ton.js',
@@ -15,7 +16,7 @@ self.addEventListener('install', (e) => {
 
 self.addEventListener('activate', (e) => {
   e.waitUntil(caches.keys()
-    .then((namen) => Promise.all(namen.filter((n) => n !== CACHE).map((n) => caches.delete(n))))
+    .then((namen) => Promise.all(namen.filter((n) => n !== CACHE && n !== ZIEL).map((n) => caches.delete(n))))
     .then(() => self.clients.claim()));
 });
 
@@ -54,8 +55,12 @@ self.addEventListener('push', (e) => {
 // Antippen der Mitteilung öffnet die App (oder holt sie nach vorne)
 self.addEventListener('notificationclick', (e) => {
   e.notification.close();
-  e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((fenster) => {
+  e.waitUntil((async () => {
+    const fenster = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
     const offen = fenster.find((f) => f.url.startsWith(self.registration.scope));
-    return offen ? offen.focus() : self.clients.openWindow('./');
-  }));
+    if (offen) return offen.focus();
+    // auf dem Computer: die Seite mit der Katze vom Handy (uhr.html mit Link), sonst die App
+    const ziel = await (await caches.open(ZIEL)).match('ziel');
+    return self.clients.openWindow(ziel ? await ziel.text() : './');
+  })());
 });

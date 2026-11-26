@@ -31,6 +31,8 @@ Entwicklung → GitHub (`ezam05/katzengarten`) → Vercel (Webseite und Server) 
 
 **Erinnerung:** Hast du 5 Stunden nichts getrunken und liegst hinter dem Plan zu 2 Litern, meldet sich deine Katze: «Mimi 🥺 – Ich hab Hunger auf Milch! Trink ein Glas Wasser 💧 Noch 1,4 l bis 2 l.» Nur 8–22 Uhr, höchstens alle 3 Stunden, nicht wenn die Katze abgehauen ist. Wasser von der Uhr zählt mit. Technik: `api/erinnern.js` (gleiche Regel wie in der App, `js/regeln.js`), aufgerufen alle 30 Minuten von GitHub Actions (`.github/workflows/erinnern.yml`, Passwort als Secret `ERINNERN_GEHEIM`).
 
+**Auch am Computer:** Uhr-Knopf → «💻 Link für den Computer schicken» → Link am Computer öffnen (Safari, Chrome oder Firefox) → «🔔 Erinnerungen auf diesem Gerät». Die Seite zeigt dieselbe Katze wie auf dem Handy (live, jede Minute neu) und man kann dort Wasser eintragen. Erinnerungen und Anstupsen kommen dann auf Handy und Computer (bis zu 5 Geräte pro Person). Antippen der Mitteilung am Computer öffnet diese Seite. Tipp für den Mac: in Safari «Ablage → Zum Dock hinzufügen».
+
 **Anstupsen:**
 Im Freunde-Blatt «🔔 Mitteilungen einschalten». Stupst dich danach eine Freundin an, kommt eine Mitteilung der App: «Mia stupst dich an 💧 – Trink was! Kiwi wartet auf Milch 🍼». Antippen öffnet die App. Auf dem iPhone geht das nur, wenn Katzengarten auf dem Home-Bildschirm liegt (ab iOS 16.4). Hat die Freundin keine Mitteilungen eingeschaltet, geht das Anstupsen wie früher als Nachricht über WhatsApp oder Nachrichten. Dieselbe Person kann man höchstens alle 30 Minuten anstupsen. Technik: `api/push.js` (Web Push mit `web-push`, Schlüssel liegen in der Datenbank), `sw.js` zeigt die Mitteilung.
 
@@ -123,6 +125,7 @@ Der Knopf «🧪 Demo» ist versteckt. **3× schnell auf das Holzschild (Wassers
 - **2026-11-26**: Abgabe-Check gegen Auftrag und Bewertungsraster. Neu: Scriptable-Widget (Katze + «noch x Liter», Wunsch Elyna), Blatt «Uhr und Widget» hinter dem Uhr-Knopf (erklärt auch den Weg auf die Uhr), App startet ohne Internet (`sw.js`, Netz zuerst, Server-Anfragen nie gespeichert), Name beim ersten Start nötig, Willkommen erklärt Streicheln und die Zahl am Tropfen, beim allerersten Start zuerst hochladen, dann abgleichen (vorher einmal «falsche Nummer» vom Server). UU II AA bleibt (Wunsch Elyna).
 - **2026-11-26**: Anstupsen als echte Mitteilung (Wunsch Elyna «sodass sie eine Benachrichtigung bekommt»). Web Push über `api/push.js`; die Schlüssel erzeugt der Server selbst und legt sie in der Datenbank ab (keine neuen Einstellungen bei Vercel nötig). Abos nur von bekannten Mitteilungsdiensten (Apple, Google, Mozilla, Microsoft). Der Name in der Mitteilung kommt vom Server, nicht vom Handy, das anstupst. Ohne Abo: Nachricht wie bisher.
 - **2026-11-26**: Erinnerung als Mitteilung (Wunsch Elyna). Zeitplan über GitHub Actions statt Vercel, weil Vercel im Gratis-Plan nur einmal am Tag einen Zeitplan erlaubt. Die App lädt dafür die Zeit des letzten Getränks mit hoch (`lt`).
+- **2026-11-26**: Mitteilungen auch am Computer (Wunsch Elyna «auch auf dem Computer angezeigt, wenn ich Wasser trinken soll»). Der Computer bekommt keine eigene Katze, sondern öffnet `uhr.html` mit dem Link vom Handy (gleiche Nummern) und meldet dort sein Mitteilungs-Abo an. Der Server speichert pro Person eine Liste von Abos (bis 5); alte Einzel-Abos werden weiter gelesen.
 
 ## Stand
 
@@ -141,3 +144,4 @@ Der Knopf «🧪 Demo» ist versteckt. **3× schnell auf das Holzschild (Wassers
 - [x] Scriptable-Widget (`widget/Katzengarten.js`, 2026-11-26)
 - [x] Anstupsen als Mitteilung (Web Push, 2026-11-26); auf echten Handys noch zu testen
 - [x] Erinnerung «Ich hab Hunger auf Milch 🥺» als Mitteilung (2026-11-26, Zeitplan über GitHub Actions); auf echten Handys noch zu testen
+- [x] Mitteilungen auch am Computer (2026-11-26, mehrere Geräte pro Person)

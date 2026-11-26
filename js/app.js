@@ -2131,6 +2131,10 @@ async function widgetCodeKopieren() {
 geraete.huelle.querySelectorAll('[data-schliessen]').forEach((x) => x.addEventListener('click', schliesseGeraete));
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape') schliesseGeraete(); });
 $('#uhr-schicken').addEventListener('click', aufDieUhr);
+$('#computer-schicken').addEventListener('click', () => teilen(
+  { titel: 'Katzengarten 💻', text: `${daten.katze.name} für den Computer`, url: uhrLink() },
+  'Öffne den Link am Computer und tipp auf «Erinnerungen auf diesem Gerät» 💻 Schick ihn nur dir selbst (er enthält deine geheime Nummer).',
+));
 $('#widget-code-kopieren').addEventListener('click', widgetCodeKopieren);
 
 // Scriptable-Script in die Zwischenablage (dann in Scriptable mit ＋ einfügen)

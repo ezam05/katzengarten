@@ -4,7 +4,7 @@
 // zu 2 Litern liegt (nur 8–22 Uhr, gleiche Regel wie in der App: js/regeln.js). Höchstens alle 3 Stunden.
 import { createHash } from 'node:crypto';
 import { befehl, antwort } from './_db.js';
-import { versand, schluessel } from './push.js';
+import { aboListe, anAlle } from './push.js';
 import { erinnerungFaellig, tagesSchluessel, ZIEL_ML } from '../js/regeln.js';
 
 const PAUSE_S = 3 * 60 * 60;
@@ -28,14 +28,13 @@ export async function erinnern(jetzt = Date.now()) {
   const ids = ((await befehl('SMEMBERS', 'profile')) || []).slice(0, HOECHSTENS);
   if (!ids.length) return { geprueft: 0, geschickt: 0 };
   const abos = await befehl('MGET', ...ids.map((i) => `push:${i}`));
-  const mitAbo = ids.map((id, n) => ({ id, abo: lies(abos[n]) })).filter((x) => x.abo);
+  const mitAbo = ids.map((id, n) => ({ id, liste: aboListe(abos[n]) })).filter((x) => x.liste.length);
   if (!mitAbo.length) return { geprueft: 0, geschickt: 0 };
   const staende = await befehl('MGET', ...mitAbo.map((x) => `stand:${x.id}`));
   const heute = tagesSchluessel(jetzt);
-  const { publicKey, privateKey } = await schluessel();
   let geschickt = 0;
 
-  for (const [n, { id, abo }] of mitAbo.entries()) {
+  for (const [n, { id, liste }] of mitAbo.entries()) {
     const s = lies(staende[n]);
     if (!s || s.k?.s === 'weg') continue;
     // Wasser von der Uhr, das das iPhone noch nicht abgeholt hat, zählt auch
@@ -51,12 +50,7 @@ export async function erinnern(jetzt = Date.now()) {
       text: `Ich hab Hunger auf Milch! Trink ein Glas Wasser 💧 Noch ${liter(Math.max(0, ZIEL_ML - heuteMl))} bis 2 l.`,
       tag: 'erinnerung',
     });
-    try {
-      await versand.senden(abo, inhalt, { TTL: 60 * 60, vapidDetails: { subject: 'https://katzengarten.vercel.app', publicKey, privateKey } });
-      geschickt++;
-    } catch (e) {
-      if (e.statusCode === 404 || e.statusCode === 410) await befehl('DEL', `push:${id}`); // Abo abgelaufen
-    }
+    if ((await anAlle(id, liste, inhalt, 60 * 60)).geschickt) geschickt++; // an Handy, Computer …
   }
   return { geprueft: mitAbo.length, geschickt };
 }
