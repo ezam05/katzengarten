@@ -2,31 +2,31 @@
 // These must be at the top of the file. Do not edit.
 // icon-color: deep-blue; icon-glyph: cat;
 
-// Katzengarten-Widget für Scriptable (iPhone)
+// Katzengarten-Widget f\u{fc}r Scriptable (iPhone)
 // Zeigt deine Katze in einem Wasser-Ring und wie viel du heute noch trinken musst.
 // Die Daten kommen live vom Katzengarten-Server (gleicher Stand wie die App).
 //
 // Einrichten:
-// 1. In der Katzengarten-App: Uhr-Knopf → «Widget» → Widget-Code kopieren.
-// 2. Homescreen gedrückt halten → ＋ → Scriptable → Grösse wählen → hinzufügen.
-// 3. Widget gedrückt halten → «Widget bearbeiten» → Script: Katzengarten,
-//    Parameter: Widget-Code einfügen.
-// Grössen: klein, mittel, gross und Sperrbildschirm (rund und rechteckig).
+// 1. In der Katzengarten-App: Uhr-Knopf \u{2192} \u{ab}Widget\u{bb} \u{2192} Widget-Code kopieren.
+// 2. Homescreen gedr\u{fc}ckt halten \u{2192} \u{ff0b} \u{2192} Scriptable \u{2192} Gr\u{f6}sse w\u{e4}hlen \u{2192} hinzuf\u{fc}gen.
+// 3. Widget gedr\u{fc}ckt halten \u{2192} \u{ab}Widget bearbeiten\u{bb} \u{2192} Script: Katzengarten,
+//    Parameter: Widget-Code einf\u{fc}gen.
+// Gr\u{f6}ssen: klein, mittel, gross und Sperrbildschirm (rund und rechteckig).
 
 const BASIS = 'https://katzengarten.vercel.app';
 const ZIEL_ML = 2000;
 const PLAN_START = 8, PLAN_ENDE = 22, TAGESWECHSEL = 4; // wie in der App (js/regeln.js)
 
-// Wie lange jede Katze braucht (Tage × 2 l Milch), wie in der App (js/arten.js)
+// Wie lange jede Katze braucht (Tage \u{d7} 2 l Milch), wie in der App (js/arten.js)
 const ARTEN = {
   toast: { name: 'Toastkatze', tage: 7 },
   tiger: { name: 'Mollige Tigerkatze', tage: 10 },
-  glueck: { name: 'Glückskatze', tage: 14 },
+  glueck: { name: 'Gl\u{fc}ckskatze', tage: 14 },
   wolke: { name: 'Wolkenkatze', tage: 21 },
   tigerbaby: { name: 'Kleiner Tiger', tage: 30 },
   tanzkatze: { name: 'UU II AA', tage: 20 },
 };
-const STUFEN = ['Baby', 'Kätzchen', 'Junge Katze', 'Gross'];
+const STUFEN = ['Baby', 'K\u{e4}tzchen', 'Junge Katze', 'Gross'];
 
 const FARBE = {
   text: new Color('#3E3128'),
@@ -44,7 +44,7 @@ if (!fm.fileExists(ordner)) fm.createDirectory(ordner, true);
 
 // ---------- Daten ----------
 
-// Widget-Code: aus dem Parameter des Widgets, sonst der gemerkte Code (Schlüsselbund).
+// Widget-Code: aus dem Parameter des Widgets, sonst der gemerkte Code (Schl\u{fc}sselbund).
 // Startet man das Script in Scriptable selbst, fragt es nach dem Code und merkt ihn sich.
 const SCHLUESSEL = 'katzengarten-widget-code';
 const findeCode = (s) => String(s || '').trim().toLowerCase().match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/)?.[0];
@@ -52,7 +52,7 @@ let code = findeCode(args.widgetParameter) || (Keychain.contains(SCHLUESSEL) ? f
 if (!config.runsInWidget && !findeCode(args.widgetParameter)) {
   const frage = new Alert();
   frage.title = 'Katzengarten-Widget';
-  frage.message = 'Füge deinen Widget-Code aus der App ein (Uhr-Knopf → «Widget» → Code kopieren).';
+  frage.message = 'F\u{fc}ge deinen Widget-Code aus der App ein (Uhr-Knopf \u{2192} \u{ab}Widget\u{bb} \u{2192} Code kopieren).';
   frage.addTextField('Widget-Code', code || findeCode(Pasteboard.paste()) || '');
   frage.addAction('Speichern');
   frage.addCancelAction('Abbrechen');
@@ -88,7 +88,7 @@ async function ladeBild(name) {
   } catch { return null; }
 }
 
-// ---------- Zeit in Zürich (ein Tag endet um 4 Uhr, wie in der App) ----------
+// ---------- Zeit in Z\u{fc}rich (ein Tag endet um 4 Uhr, wie in der App) ----------
 
 function zuerich(ms) {
   const t = {};
@@ -135,11 +135,11 @@ function auswerten(d) {
 
 function satz(w) {
   switch (w.status) {
-    case 'weg': return { gross: `${w.katze} ist weg 🧳`, klein: 'Öffne die App und hol sie zurück' };
-    case 'gross': return { gross: 'Ich bin gross! 🎉', klein: 'Bring mich in den Garten' };
-    case 'geschafft': return { gross: 'Geschafft! 2 l 🎉', klein: `${w.katze} ist satt` };
-    case 'hungrig': return { gross: `Noch ${liter(w.noch)} 💧`, klein: 'Ich hab Hunger auf Milch 🥺' };
-    default: return { gross: `Noch ${liter(w.noch)} 💧`, klein: `${w.katze} geht es gut` };
+    case 'weg': return { gross: `${w.katze} ist weg \u{1f9f3}`, klein: '\u{d6}ffne die App und hol sie zur\u{fc}ck' };
+    case 'gross': return { gross: 'Ich bin gross! \u{1f389}', klein: 'Bring mich in den Garten' };
+    case 'geschafft': return { gross: 'Geschafft! 2 l \u{1f389}', klein: `${w.katze} ist satt` };
+    case 'hungrig': return { gross: `Noch ${liter(w.noch)} \u{1f4a7}`, klein: 'Ich hab Hunger auf Milch \u{1f97a}' };
+    default: return { gross: `Noch ${liter(w.noch)} \u{1f4a7}`, klein: `${w.katze} geht es gut` };
   }
 }
 
@@ -188,7 +188,7 @@ function ringBild(katze, anteil, w) {
   if (w.status === 'weg') {
     dc.setFont(Font.systemFont(64));
     dc.setTextAlignedCenter();
-    dc.drawTextInRect('🧳', new Rect(0, c - 44, S, 90));
+    dc.drawTextInRect('\u{1f9f3}', new Rect(0, c - 44, S, 90));
   } else if (katze) {
     const k = innen * 1.62;
     dc.drawImageInRect(katze, new Rect(c - k / 2, c - k / 2 + 4, k, k));
@@ -239,7 +239,7 @@ function hinweisWidget(titel, zeile) {
   const w = new ListWidget();
   hintergrund(w);
   w.setPadding(14, 14, 14, 14);
-  text(w, '🐱 Katzengarten', 13, { fett: true, farbe: FARBE.wasser });
+  text(w, '\u{1f431} Katzengarten', 13, { fett: true, farbe: FARBE.wasser });
   w.addSpacer(6);
   text(w, titel, 15, { fett: true, zeilen: 2 });
   w.addSpacer(4);
@@ -264,15 +264,15 @@ async function katzenWidget(daten, offline, familie) {
     const st = widget.addStack();
     st.layoutVertically();
     st.centerAlignContent();
-    const o = st.addText('💧'); o.font = Font.systemFont(11); o.centerAlignText();
-    const z = st.addText(w.status === 'geschafft' ? '✓' : zahl(w.noch / 1000)); z.font = Font.boldRoundedSystemFont(18); z.centerAlignText();
+    const o = st.addText('\u{1f4a7}'); o.font = Font.systemFont(11); o.centerAlignText();
+    const z = st.addText(w.status === 'geschafft' ? '\u{2713}' : zahl(w.noch / 1000)); z.font = Font.boldRoundedSystemFont(18); z.centerAlignText();
     const u = st.addText('Liter'); u.font = Font.mediumRoundedSystemFont(9); u.centerAlignText();
     return widget;
   }
   if (familie === 'accessoryRectangular') {
-    text(widget, `🐱 ${w.katze}`, 13, { fett: true, farbe: Color.white() });
+    text(widget, `\u{1f431} ${w.katze}`, 13, { fett: true, farbe: Color.white() });
     text(widget, s.gross, 15, { fett: true, farbe: Color.white() });
-    text(widget, `heute ${liter(w.heute)} von 2 l`, 11, { farbe: Color.white() });
+    text(widget, w.noch > 0 ? `Noch ${liter(w.noch)} Wasser bis zum Tagesziel` : 'Tagesziel 2 l erreicht', 11, { farbe: Color.white() });
     return widget;
   }
 
@@ -289,7 +289,11 @@ async function katzenWidget(daten, offline, familie) {
     widget.addSpacer(4);
     const t = text(widget, s.gross, 17, { fett: true, farbe: w.status === 'hungrig' ? FARBE.orange : FARBE.text });
     t.centerAlignText();
-    const u = text(widget, `${w.katze} · 🔥 ${w.streak}`, 11, { farbe: FARBE.leise });
+    if (w.status !== 'weg') {
+      const z = text(widget, w.noch > 0 ? 'Wasser bis zum Tagesziel' : 'Tagesziel erreicht', 10, { farbe: FARBE.leise });
+      z.centerAlignText();
+    }
+    const u = text(widget, `${w.katze} \u{b7} \u{1f525} ${w.streak}`, 10, { farbe: FARBE.leise });
     u.centerAlignText();
     return widget;
   }
@@ -310,15 +314,15 @@ async function katzenWidget(daten, offline, familie) {
   const balken = rechts.addImage(balkenBild(anteil));
   balken.imageSize = new Size(150, 8);
   rechts.addSpacer(4);
-  text(rechts, `heute ${liter(w.heute)} von 2 l`, 11, { farbe: FARBE.leise });
+  text(rechts, w.noch > 0 ? `Noch ${liter(w.noch)} Wasser bis zum Tagesziel` : 'Tagesziel 2 l erreicht', 11, { farbe: FARBE.leise, zeilen: 2 });
   rechts.addSpacer(6);
-  text(rechts, `${w.katze} · ${STUFEN[w.stufe]} · 🔥 ${w.streak}`, 12, { fett: true });
+  text(rechts, `${w.katze} \u{b7} ${STUFEN[w.stufe]} \u{b7} \u{1f525} ${w.streak}`, 12, { fett: true });
 
   if (familie === 'large') {
     widget.addSpacer(16);
-    text(widget, w.status === 'gross' ? `${w.katze} ist gross geworden 🎉` : `Bis ${w.katze} gross ist: noch ${liter(w.bisGross)} Wasser`, 14, { fett: true });
+    text(widget, w.status === 'gross' ? `${w.katze} ist gross geworden \u{1f389}` : `Bis ${w.katze} gross ist: noch ${liter(w.bisGross)} Wasser`, 14, { fett: true });
     widget.addSpacer(14);
-    text(widget, `Im Katzengarten 🏡 · ${w.garten} ${w.garten === 1 ? 'Katze' : 'Katzen'}`, 14, { fett: true });
+    text(widget, `Im Katzengarten \u{1f3e1} \u{b7} ${w.garten} ${w.garten === 1 ? 'Katze' : 'Katzen'}`, 14, { fett: true });
     widget.addSpacer(6);
     // die letzten 5 Katzen aus dem Garten
     const reiheGarten = widget.addStack();
@@ -337,8 +341,7 @@ async function katzenWidget(daten, offline, familie) {
     widget.addSpacer();
   }
   widget.addSpacer(familie === 'large' ? 0 : 6);
-  const fuss = text(widget, `${offline ? 'Offline · ' : ''}Stand ${uhrzeit(w.stand)}`, 9, { farbe: FARBE.leise });
-  fuss.rightAlignText();
+  if (offline) text(widget, 'Offline', 9, { farbe: FARBE.leise }).rightAlignText();
   return widget;
 }
 
@@ -347,12 +350,12 @@ async function katzenWidget(daten, offline, familie) {
 const familie = config.widgetFamily || 'medium';
 let widget;
 if (!code) {
-  widget = hinweisWidget('Widget-Code fehlt', 'In der App: Uhr-Knopf → «Widget» → Code kopieren. Dann dieses Script einmal in Scriptable öffnen und den Code einfügen.');
+  widget = hinweisWidget('Widget-Code fehlt', 'In der App: Uhr-Knopf \u{2192} \u{ab}Widget\u{bb} \u{2192} Code kopieren. Dann dieses Script einmal in Scriptable \u{f6}ffnen und den Code einf\u{fc}gen.');
 } else {
   const { daten, offline } = await ladeStand(code);
   widget = daten
     ? await katzenWidget(daten, offline, familie)
-    : hinweisWidget(offline ? 'Kein Internet' : 'Noch keine Daten', 'Öffne die Katzengarten-App einmal auf diesem Handy, dann erscheint deine Katze hier.');
+    : hinweisWidget(offline ? 'Kein Internet' : 'Noch keine Daten', '\u{d6}ffne die Katzengarten-App einmal auf diesem Handy, dann erscheint deine Katze hier.');
 }
 
 if (config.runsInWidget) Script.setWidget(widget);
