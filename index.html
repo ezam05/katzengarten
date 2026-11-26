@@ -157,7 +157,7 @@
       <svg id="freundin-mini" viewBox="-58 -120 116 124" aria-hidden="true"></svg>
     </button>
     <button class="rund-knopf ton-knopf" id="ton-knopf" type="button" aria-label="Ton ausschalten">🔊</button>
-    <button class="rund-knopf uhr-knopf" id="uhr-knopf" type="button" aria-label="Katze auf die Apple Watch schicken">
+    <button class="rund-knopf uhr-knopf" id="uhr-knopf" type="button" aria-label="Apple Watch und Widget">
       <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="7" y="2" width="10" height="4" rx="1.5" fill="currentColor"/><rect x="7" y="18" width="10" height="4" rx="1.5" fill="currentColor"/><rect x="4.5" y="5" width="15" height="14" rx="4.5" fill="currentColor"/><path d="M12 9 V12.5 L14.5 14" stroke="#fff" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg>
     </button>
   </div>
@@ -331,6 +331,29 @@
     </section>
   </div>
 
+  <!-- ================= UHR UND WIDGET ================= -->
+  <div class="unterblatt-huelle" id="geraete" hidden>
+    <div class="unterblatt-hintergrund" data-schliessen></div>
+    <section class="unterblatt" role="dialog" aria-modal="true" aria-labelledby="geraete-titel">
+      <div class="griff" aria-hidden="true"></div>
+      <header class="unterblatt-kopf">
+        <h2 id="geraete-titel">⌚ Uhr und 📱 Widget</h2>
+        <button class="schliessen-knopf" type="button" data-schliessen aria-label="Schliessen">✕</button>
+      </header>
+      <h3 class="geraete-titel">Apple Watch</h3>
+      <p class="laden-hinweis">Deine Katze und wie viel du noch trinken musst, direkt auf der Uhr. Du kannst dort auch Wasser eintragen. Schick dir den Link selbst und tipp ihn auf der Uhr in Nachrichten an.</p>
+      <button class="anstupsen-knopf" id="uhr-schicken" type="button">⌚ Link für die Uhr schicken</button>
+      <h3 class="geraete-titel">Widget für den Startbildschirm</h3>
+      <ol class="geraete-schritte">
+        <li>Lade die Gratis-App <strong>Scriptable</strong> aus dem App Store und leg das Script <a href="widget/Katzengarten.js" target="_blank" rel="noopener">«Katzengarten»</a> darin an.</li>
+        <li>Kopier deinen Widget-Code und öffne das Script einmal in Scriptable. Es fragt nach dem Code.</li>
+        <li>Startbildschirm gedrückt halten → ＋ → Scriptable → Widget hinzufügen → Script «Katzengarten» wählen.</li>
+      </ol>
+      <p class="widget-code" id="widget-code" aria-label="Dein Widget-Code"></p>
+      <button class="zweit-knopf" id="widget-code-kopieren" type="button">📋 Widget-Code kopieren</button>
+    </section>
+  </div>
+
   <!-- ================= WILLKOMMEN (erster Start) ================= -->
   <div class="unterblatt-huelle" id="willkommen" hidden>
     <div class="unterblatt-hintergrund"></div>
@@ -338,12 +361,14 @@
       <div class="griff" aria-hidden="true"></div>
       <h2 id="willkommen-titel">Willkommen im Katzengarten 🐾</h2>
       <ol class="willkommen-schritte">
-        <li><span aria-hidden="true">💧</span> Trink Wasser und trag es mit dem Tropfen ein.</li>
+        <li><span aria-hidden="true">💧</span> Trink Wasser und trag es mit dem Tropfen ein. Die Zahl daneben: so viele Gläser fehlen noch bis 2 Liter.</li>
         <li><span aria-hidden="true">🍼</span> Dein Kätzchen bekommt gleich viel Milch und wächst: Baby → Kätzchen → junge Katze → gross.</li>
+        <li><span aria-hidden="true">🐾</span> Tipp es an oder streichle es mit dem Finger, dann schnurrt es.</li>
         <li><span aria-hidden="true">🏡</span> Ist es gross, zieht es in deinen Katzengarten.</li>
         <li><span aria-hidden="true">🧳</span> Trinkst du zu wenig, haut es ab.</li>
       </ol>
-      <label class="feld">Wie heisst du?<input id="w-name" type="text" maxlength="20" autocomplete="given-name" placeholder="Dein Name"></label>
+      <label class="feld">Wie heisst du?<input id="w-name" type="text" maxlength="20" autocomplete="given-name" placeholder="Dein Name" aria-describedby="w-fehler"></label>
+      <p class="w-fehler" id="w-fehler" role="alert" hidden>Bitte gib deinen Namen ein. So sehen dich deine Freundinnen.</p>
       <p class="feld-titel" id="w-auswahl-titel">Wähle dein erstes Kätzchen</p>
       <div class="w-auswahl" id="w-auswahl" role="radiogroup" aria-labelledby="w-auswahl-titel"></div>
       <label class="feld">Wie heisst dein Kätzchen?<input id="w-katze" type="text" maxlength="14"></label>

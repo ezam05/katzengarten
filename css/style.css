@@ -698,6 +698,34 @@ button:focus-visible, [tabindex]:focus-visible {
 }
 .laden-hinweis { margin: 8px 0 14px; font-size: 14px; line-height: 1.4; color: #55616B; }
 
+.w-fehler { margin: -4px 0 8px; font-size: 13px; font-weight: 700; color: #C9431F; }
+.w-fehler[hidden] { display: none; }
+
+/* Uhr und Widget */
+.geraete-titel {
+  margin: 18px 0 0;
+  font-family: var(--schrift-titel);
+  font-weight: 600;
+  font-size: 17px;
+  color: var(--text-dunkel);
+}
+.geraete-schritte { margin: 8px 0 12px; padding-left: 22px; font-size: 14px; line-height: 1.45; color: #55616B; }
+.geraete-schritte li + li { margin-top: 6px; }
+.geraete-schritte a { color: #1C6FAE; font-weight: 700; }
+.widget-code {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: #F2F7FA;
+  font-family: ui-monospace, Menlo, monospace;
+  font-size: 13px;
+  color: #2E3A44;
+  text-align: center;
+  word-break: break-all;
+  user-select: all;
+  -webkit-user-select: all;
+}
+
 .laden-raster { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
 .art-karte {
   position: relative;

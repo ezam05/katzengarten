@@ -1,7 +1,37 @@
-# Katzengarten
+# Katzengarten 🐾
 
-Handy-App (PWA) im Cartoon-Stil: Du trinkst Wasser, dein Kätzchen bekommt dafür Milch und wird gross. Grosse Katzen ziehen in den Katzengarten. Zusammen mit einer Freundin.
-Projekt für das Modul Vibe Coding, HF Interaction Design. Ersetzt die Trink-Pflanze-App (bleibt als Backup im Ordner daneben). Aufbau, Regeln und Knöpfe sind von dort übernommen, überall sind Katzen statt Pflanzen.
+Handy-App (PWA) im Cartoon-Stil: Du trinkst Wasser, dein Kätzchen bekommt dafür Milch und wird gross. Grosse Katzen ziehen in deinen Katzengarten. Dazu ein Widget für den iPhone-Startbildschirm und eine Ansicht für die Apple Watch.
+
+**App:** https://katzengarten.vercel.app · **Widget:** [`widget/Katzengarten.js`](widget/Katzengarten.js) (Scriptable) · **Uhr:** https://katzengarten.vercel.app/uhr.html
+
+Projekt im Modul Vibe Coding, HF Interaction Design, Schule für Gestaltung Zürich, Herbst 2026.
+
+## Problem
+
+Junge Erwachsene wissen, dass sie etwa 2 Liter Wasser am Tag trinken sollten, und haben oft sogar eine Flasche dabei. Im Alltag zwischen Schule, Arbeit und unterwegs vergessen sie es trotzdem und merken es erst am Abend: Kopfweh, Müdigkeit, schlechte Konzentration. Normale Trink-Apps zählen nur Zahlen. Sie sind langweilig und nach ein paar Tagen vergessen.
+
+## Idee
+
+Katzengarten macht aus Trinken Fürsorge. Jedes Glas Wasser wird zu Milch für ein Kätzchen, das man vom Baby bis zur grossen Katze aufzieht. Wer genug trinkt, sieht es wachsen und sammelt Katzen im eigenen Katzengarten. Wer zu wenig trinkt, dessen Kätzchen haut ab. Freundinnen sehen gegenseitig, wie es ihren Katzen geht, und können sich anstupsen. Das Widget und die Uhr zeigen auf einen Blick, wie viel heute noch fehlt, ohne dass man die App öffnen muss.
+
+> Für junge Erwachsene, die im Alltag vergessen, genug zu trinken, entwickle ich eine App, mit der sie ein Kätzchen grossziehen, indem sie Wasser trinken, wenn sie unterwegs, in der Schule oder bei der Arbeit sind.
+
+**Zielgruppe:** Freundinnen Anfang 20, Handy immer in der Hand, trinken zu wenig.
+**Ziel pro Tag:** 2 Liter Wasser, Tee oder Mineralwasser, verteilt von 8 bis 22 Uhr.
+
+## Weg der Webseite
+
+Entwicklung → GitHub (`ezam05/katzengarten`) → Vercel (Webseite und Server) → App auf dem Handy (iPhone und Android) und Apple Watch → Widget (Scriptable). Alle Nutzerinnen haben eine eigene Nummer, ihr Stand liegt in einer Datenbank (Upstash Redis), damit Freundinnen, Uhr und Widget den gleichen Stand sehen.
+
+## Widget
+
+`widget/Katzengarten.js` für die Gratis-App Scriptable. Zeigt deine Katze in einem Wasser-Ring und **wie viel du heute noch trinken musst**, dazu Name, Stufe und Streak. Die Katze schaut hungrig, wenn du hinter dem Plan bist. Grössen: klein, mittel, gross (mit den Katzen aus dem Garten) und Sperrbildschirm.
+
+1. In der App: Uhr-Knopf → «Widget-Code kopieren».
+2. Script in Scriptable anlegen und einmal öffnen, den Code einfügen.
+3. Startbildschirm gedrückt halten → ＋ → Scriptable → Widget hinzufügen → Script «Katzengarten».
+
+Die Katzenbilder fürs Widget liegen in `bilder/widget/` (je Katze × Stufe × glücklich/hungrig), gerendert aus denselben Zeichnungen wie in der App (`js/katze.js`).
 
 ## App starten
 
@@ -79,6 +109,7 @@ Der Knopf «🧪 Demo» ist versteckt. **3× schnell auf das Holzschild (Wassers
 - **2026-11-21**: Im Garten haben die Katzen keine festen Plätze mehr, sie laufen frei herum. Verschieben geht mit lange drücken und ziehen; der Platz wird nicht gespeichert (sie laufen ja wieder weg).
 - **2026-11-21**: «Rückgängig» nimmt auch Milch zurück, falls die Milch von diesem Getränk schon gefüttert war.
 - **2026-11-21**: Daten liegen im Browser (`localStorage`, Name `katzengarten-v1`). Konten und Datenbank kommen mit dem Server-Schritt.
+- **2026-11-26**: Abgabe-Check gegen Auftrag und Bewertungsraster. Neu: Scriptable-Widget (Katze + «noch x Liter», Wunsch Elyna), Blatt «Uhr und Widget» hinter dem Uhr-Knopf (erklärt auch den Weg auf die Uhr), App startet ohne Internet (`sw.js`, Netz zuerst, Server-Anfragen nie gespeichert), Name beim ersten Start nötig, Willkommen erklärt Streicheln und die Zahl am Tropfen, beim allerersten Start zuerst hochladen, dann abgleichen (vorher einmal «falsche Nummer» vom Server). UU II AA bleibt (Wunsch Elyna).
 
 ## Stand
 
@@ -92,6 +123,6 @@ Der Knopf «🧪 Demo» ist versteckt. **3× schnell auf das Holzschild (Wassers
 - [x] Automatisch füttern, bis 3 l Milch, Garten ab 3 Katzen grösser, Kollegin einladen (Links)
 - [x] Eigener Usertest (`USERTEST.md`)
 - [x] Wachsen in Stufen, Zurückholen für 4 🪙, Erster Start, Demo versteckt, keine Milch-Grenze
-- [ ] Ohne Internet (Service Worker)
-- [ ] Vercel, Konten und Datenbank, damit Uhr und Freundin live sind (Ablauf: bilder/vorlagen/ablauf-webseite.png)
-- [ ] Scriptable-Widget
+- [x] Ohne Internet (Service Worker `sw.js`, 2026-11-26)
+- [x] Vercel, Nummern und Datenbank, damit Uhr, Freundin und Widget live sind
+- [x] Scriptable-Widget (`widget/Katzengarten.js`, 2026-11-26)

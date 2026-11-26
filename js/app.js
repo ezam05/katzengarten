@@ -2084,6 +2084,40 @@ async function aufDieUhr() {
     'Schick den Link nur dir selbst (er enthält deine geheime Nummer) und tipp ihn auf der Uhr an ⌚');
 }
 
+// ---------- Uhr und Widget (Blatt hinter dem Uhr-Knopf) ----------
+// Das Scriptable-Widget (widget/Katzengarten.js) liest den Stand über die öffentliche Nummer.
+
+const geraete = { huelle: $('#geraete'), zurueckFokus: null };
+
+function oeffneGeraete() {
+  geraete.zurueckFokus = document.activeElement;
+  faecher(false);
+  $('#widget-code').textContent = daten.konto.id;
+  hochladen(); // damit das Widget gleich Daten findet
+  geraete.huelle.hidden = false;
+  geraete.huelle.querySelector('.schliessen-knopf').focus();
+}
+
+function schliesseGeraete() {
+  if (geraete.huelle.hidden) return;
+  geraete.huelle.hidden = true;
+  geraete.zurueckFokus?.focus?.();
+}
+
+async function widgetCodeKopieren() {
+  try {
+    await navigator.clipboard.writeText(daten.konto.id);
+    zeigeMeldung('Widget-Code kopiert 📋 Jetzt das Script in Scriptable öffnen.', false);
+  } catch {
+    prompt('Widget-Code kopieren:', daten.konto.id);
+  }
+}
+
+geraete.huelle.querySelectorAll('[data-schliessen]').forEach((x) => x.addEventListener('click', schliesseGeraete));
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') schliesseGeraete(); });
+$('#uhr-schicken').addEventListener('click', aufDieUhr);
+$('#widget-code-kopieren').addEventListener('click', widgetCodeKopieren);
+
 // ---------- Kollegin: einladen, Katze schicken, Katze der Kollegin übernehmen ----------
 // Jede hat ihre eigene Katze und ihren eigenen Garten (gespeichert auf ihrem Handy).
 // Ohne Server schickt man sich die Katze als Link; wer den Link öffnet, sieht sie unter «Freundin».
@@ -2178,7 +2212,7 @@ $('#zeigen-knopf').addEventListener('click', async () => {
   }, 'Öffnet sie den Link, sieht sie deine Katze und deinen Garten.');
 });
 
-$('#uhr-knopf').addEventListener('click', aufDieUhr);
+$('#uhr-knopf').addEventListener('click', oeffneGeraete);
 
 // ---------- Willkommen (erster Start): Name, erstes Kätzchen ----------
 
@@ -2220,7 +2254,9 @@ $('#w-auswahl').addEventListener('click', (e) => {
 
 $('#w-los').addEventListener('click', () => {
   const name = sauber($('#w-name').value, 20);
-  if (name) daten.name = name;
+  $('#w-fehler').hidden = !!name;
+  if (!name) { $('#w-name').focus(); return; } // ohne Namen fehlt man in der Freunde-Liste
+  daten.name = name;
   daten.katze = { name: sauber($('#w-katze').value) || neuerName(), artId: willkommen.wahl, milch: 0, status: 'waechst' };
   if (!daten.freigeschaltet.includes(willkommen.wahl)) daten.freigeschaltet.push(willkommen.wahl);
   daten.gestartet = true;
@@ -2556,10 +2592,12 @@ window.addEventListener('hashchange', freundinAusLink); // Link kommt, während 
 document.fonts?.ready.then(() => { zeigeName(daten.katze.name); if (!blaseTimer) zeigeNormaleBlase(false); });
 // Zustand hängt von der Uhrzeit ab: jede Minute neu prüfen
 setInterval(() => { abrechnen(); zeichne(); abgleichen(); if (!document.hidden) hochladen(); }, 60 * 1000); // hochladen = «zuletzt da»
-abgleichen();
-hochladen();
+// erst hochladen (legt beim allerersten Start die geheime Nummer an), dann abgleichen
+hochladen().then(abgleichen);
 // Beim Zurückkommen in die App (z. B. am Morgen) gleich abrechnen
 document.addEventListener('visibilitychange', () => {
   if (!document.hidden) { abrechnen(); zeichne(); abgleichen(); }
   else if (hochladenTimer) hochladen(); // App geht zu: letzte Änderung sofort hochladen
 });
+// Ohne Internet starten (sw.js)
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => { /* z. B. privates Fenster */ });
