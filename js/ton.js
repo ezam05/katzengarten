@@ -33,9 +33,11 @@ export function tonEntsperren() {
   q.start(0);
 }
 
-// Miau: Ton gleitet hoch und wieder runter, durch einen «Mund»-Filter (das alte Miau, Wunsch Elyna 2026-11-27)
-export function baueMiau(a, ziel, t, { hoch = 1, lang = 1 } = {}) {
-  const d = 0.55 * lang;
+// Miau: Ton gleitet hoch und wieder runter, durch einen «Mund»-Filter
+export function miau({ hoch = 1, lang = 1 } = {}) {
+  const a = audio();
+  if (!a) return;
+  const t = a.currentTime, d = 0.55 * lang;
   const osz = a.createOscillator();
   osz.type = 'sawtooth';
   osz.frequency.setValueAtTime(520 * hoch, t);
@@ -52,67 +54,36 @@ export function baueMiau(a, ziel, t, { hoch = 1, lang = 1 } = {}) {
   laut.gain.exponentialRampToValueAtTime(0.35, t + 0.06);
   laut.gain.setValueAtTime(0.35, t + d * 0.6);
   laut.gain.exponentialRampToValueAtTime(0.0001, t + d);
-  osz.connect(mund).connect(laut).connect(ziel);
+  osz.connect(mund).connect(laut).connect(a.destination);
   osz.start(t);
   osz.stop(t + d + 0.05);
-  return d;
 }
 
-export function miau(optionen = {}) {
-  const a = audio();
-  if (a) baueMiau(a, a.destination, a.currentTime, optionen);
-}
-
-// Schnurren: rund 25 kleine Stösse pro Sekunde (tiefes Rauschen, das jedes Mal kurz anschlägt),
-// beim Ausatmen lauter, beim Einatmen leiser und etwas langsamer, dazwischen eine kurze Pause.
-// Zwei Atemzüge werden einmal berechnet und dann endlos wiederholt.
-const ATEMZUG = 2.1; // Sekunden
-export function schnurrPuffer(a, zufall = Math.random) {
-  const sr = a.sampleRate;
-  const puffer = a.createBuffer(1, Math.round(sr * ATEMZUG * 2), sr);
-  const s = puffer.getChannelData(0);
-  let braun = 0, phase = 0, groesster = 0;
-  for (let i = 0; i < s.length; i++) {
-    const zt = (i / sr) % ATEMZUG;
-    const aus = zt < 1.2;
-    const atem = aus ? Math.sin(Math.PI * zt / 1.2) ** 0.5
-      : zt > 1.3 && zt < 2.05 ? 0.55 * Math.sin(Math.PI * (zt - 1.3) / 0.75) ** 0.5 : 0;
-    phase = (phase + (aus ? 24 : 21) / sr) % 1;
-    const stoss = Math.sin(Math.PI * phase) ** 2; // runde, weiche Stösse (Wunsch Elyna: tiefer und weicher)
-    const weiss = zufall() * 2 - 1;
-    braun = (braun + 0.025 * weiss) / 1.025; // tiefes, weiches Rauschen
-    s[i] = (braun * 4 + weiss * 0.04) * stoss * atem;
-    groesster = Math.max(groesster, Math.abs(s[i]));
-  }
-  for (let i = 0; i < s.length; i++) s[i] /= groesster || 1;
-  return puffer;
-}
-
-export function baueSchnurren(a, ziel, t) {
-  const quelle = a.createBufferSource();
-  quelle.buffer = schnurrPuffer(a);
-  quelle.loop = true;
-  const tief = a.createBiquadFilter();
-  tief.type = 'lowpass';
-  tief.frequency.value = 480;
-  // Brustkorb klingt mit; etwas Mitte, damit man es auch auf Handy-Lautsprechern hört (die tiefe Töne kaum spielen)
-  const bauch = a.createBiquadFilter();
-  bauch.type = 'peaking';
-  bauch.frequency.value = 140;
-  bauch.Q.value = 0.8;
-  bauch.gain.value = 6;
-  const lautstaerke = a.createGain();
-  lautstaerke.gain.setValueAtTime(0.0001, t);
-  lautstaerke.gain.exponentialRampToValueAtTime(0.7, t + 0.4);
-  quelle.connect(tief).connect(bauch).connect(lautstaerke).connect(ziel);
-  quelle.start(t);
-  return { quellen: [quelle], lautstaerke };
-}
-
+// Schnurren: tiefes Brummen, das 25-mal pro Sekunde pulsiert
 export function schnurrenStart() {
   const a = audio();
   if (!a || schnurren) return;
-  schnurren = baueSchnurren(a, a.destination, a.currentTime);
+  const t = a.currentTime;
+  const brumm = a.createOscillator();
+  brumm.type = 'sawtooth';
+  brumm.frequency.value = 48;
+  const filter = a.createBiquadFilter();
+  filter.type = 'lowpass';
+  filter.frequency.value = 260;
+  const puls = a.createGain();
+  puls.gain.value = 0.5;
+  const pulsOsz = a.createOscillator();
+  pulsOsz.frequency.value = 25;
+  const pulsTiefe = a.createGain();
+  pulsTiefe.gain.value = 0.5;
+  pulsOsz.connect(pulsTiefe).connect(puls.gain);
+  const lautstaerke = a.createGain();
+  lautstaerke.gain.setValueAtTime(0.0001, t);
+  lautstaerke.gain.exponentialRampToValueAtTime(0.5, t + 0.3);
+  brumm.connect(filter).connect(puls).connect(lautstaerke).connect(a.destination);
+  brumm.start(t);
+  pulsOsz.start(t);
+  schnurren = { quellen: [brumm, pulsOsz], lautstaerke };
 }
 
 export function schnurrenStopp() {
