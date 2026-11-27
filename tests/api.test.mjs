@@ -19,6 +19,7 @@ globalThis.fetch = async (_url, { body }) => {
   else if (cmd === 'EXPIRE') result = 1;
   else if (cmd === 'SADD') { const m = db.get(k) || new Set(); a.forEach((x) => m.add(x)); db.set(k, m); result = 1; }
   else if (cmd === 'SMEMBERS') result = [...(db.get(k) || [])];
+  else if (cmd === 'SISMEMBER') result = (db.get(k) || new Set()).has(a[0]) ? 1 : 0;
   else if (cmd === 'SREM') { const m = db.get(k) || new Set(); a.forEach((x) => m.delete(x)); result = 1; }
   else if (cmd === 'MGET') result = [k, ...a].map((x) => db.get(x) ?? null);
   return { json: async () => ({ result }) };
@@ -53,17 +54,29 @@ assert.equal(abgeholt.daten.liste.length, 1);
 assert.equal(abgeholt.daten.liste[0].ml, 250);
 assert.equal((await anfrage(trinken, 'POST', { body: { id, geheim, aktion: 'abholen' } })).daten.liste.length, 0);
 
-// Freunde-Liste: nur Name, Art, Stufe, heute, aktiv, Kennung – keine geheime Nummer; ohne Namen nicht dabei
+// Freundinnen: nur verbundene, nur Name, Art, Stufe, heute, aktiv, Kennung, Mitteilungen – keine geheime Nummer; ohne Namen nicht dabei
 const { default: freunde } = await import('../api/freunde.js');
-const id2 = randomUUID(), g2 = randomUUID(), id3 = randomUUID();
+const id2 = randomUUID(), g2 = randomUUID(), id3 = randomUUID(), g3 = randomUUID();
 await anfrage(stand, 'POST', { body: { id: id2, geheim: g2, stand: { v: 1, n: 'Mia', t: Date.now(), h: 750, k: { a: 'tiger', m: 10000 } } } });
-await anfrage(stand, 'POST', { body: { id: id3, geheim: randomUUID(), stand: { v: 1, n: '', t: Date.now(), k: { a: 'toast', m: 0 } } } });
-const liste = (await anfrage(freunde, 'GET')).daten.freunde;
+await anfrage(stand, 'POST', { body: { id: id3, geheim: g3, stand: { v: 1, n: '', t: Date.now(), k: { a: 'toast', m: 0 } } } });
+const meine = async (wer) => (await anfrage(freunde, 'GET', { query: { id: wer } })).daten.freunde;
+assert.deepEqual((await anfrage(freunde, 'GET', {})).daten.freunde, [], 'ohne Nummer: niemand');
+assert.deepEqual(await meine(id), [], 'noch keine Freundin');
+assert.equal((await anfrage(freunde, 'POST', { body: { id, geheim, aktion: 'verbinden', mit: randomUUID() } })).code, 404, 'unbekannte Person');
+assert.equal((await anfrage(freunde, 'POST', { body: { id, geheim: randomUUID(), aktion: 'verbinden', mit: id2 } })).code, 403);
+const verb = await anfrage(freunde, 'POST', { body: { id, geheim, aktion: 'verbinden', mit: id2 } });
+assert.equal(verb.daten.name, 'Mia');
+await anfrage(freunde, 'POST', { body: { id, geheim, aktion: 'verbinden', mit: id3 } });
+const liste = await meine(id);
 const mia = liste.find((f) => f.id === id2);
-assert.deepEqual(Object.keys(mia).sort(), ['aktiv', 'art', 'heuteMl', 'id', 'name', 'stufe']);
-assert.equal(mia.name, 'Mia'); assert.equal(mia.stufe, 1); // 10 von 20 l = Kätzchen assert.equal(mia.heuteMl, 750);
+assert.deepEqual(Object.keys(mia).sort(), ['aktiv', 'art', 'heuteMl', 'id', 'mitteilungen', 'name', 'stufe']);
+assert.equal(mia.name, 'Mia'); assert.equal(mia.stufe, 1); assert.equal(mia.heuteMl, 750); assert.equal(mia.mitteilungen, false);
 assert.ok(!liste.some((f) => f.id === id3), 'ohne Namen nicht in der Liste');
 assert.ok(!JSON.stringify(liste).includes(geheim) && !JSON.stringify(liste).includes(g2), 'keine geheime Nummer');
+assert.equal((await meine(id2))[0].name, 'Elyna', 'beide Seiten verbunden');
+assert.deepEqual(await meine(id3).then((l) => l.map((f) => f.id)), [id], 'auch die Namenlose sieht mich');
+await anfrage(freunde, 'POST', { body: { id: id3, geheim: g3, aktion: 'trennen', mit: id } });
+assert.deepEqual(await meine(id3), []);
 
 // Mitteilungen (Anstupsen): Abo speichern, anstupsen, Pause, abgelaufenes Abo, fremde Adressen abweisen
 const { default: push, versand } = await import('../api/push.js');
@@ -75,6 +88,7 @@ assert.equal((await anfrage(push, 'GET', { query: { aktion: 'schluessel' } })).d
 const abo = { endpoint: 'https://fcm.googleapis.com/fcm/send/abc', keys: { p256dh: 'p', auth: 'a' } };
 assert.equal((await anfrage(push, 'POST', { body: { id: id2, geheim: g2, aktion: 'abo', abo: { ...abo, endpoint: 'https://boese.example.com/x' } } })).code, 400, 'nur bekannte Dienste');
 assert.equal((await anfrage(push, 'POST', { body: { id: id2, geheim: randomUUID(), aktion: 'abo', abo } })).code, 403);
+assert.equal((await anfrage(push, 'POST', { body: { id: id3, geheim: g3, aktion: 'stupsen', an: id2 } })).code, 403, 'nur Freundinnen');
 assert.equal((await anfrage(push, 'POST', { body: { id, geheim, aktion: 'stupsen', an: id2 } })).daten.grund, 'kein-abo');
 assert.equal((await anfrage(push, 'POST', { body: { id: id2, geheim: g2, aktion: 'abo', abo } })).code, 200);
 const stups = await anfrage(push, 'POST', { body: { id, geheim, aktion: 'stupsen', an: id2 } });
@@ -93,6 +107,7 @@ assert.equal(db.has(`push:${id2}`), false);
 // Mehrere Geräte (Handy und Computer): beide bekommen die Mitteilung; abgelaufenes Gerät fällt weg, das andere bleibt
 const idM = randomUUID(), gM = randomUUID();
 await anfrage(stand, 'POST', { body: { id: idM, geheim: gM, stand: { v: 1, n: 'Mara', t: Date.now(), k: { n: 'Nala', a: 'glueck', m: 0, s: 'waechst' } } } });
+await anfrage(freunde, 'POST', { body: { id, geheim, aktion: 'verbinden', mit: idM } });
 const handy = { endpoint: 'https://web.push.apple.com/handy', keys: { p256dh: 'p', auth: 'a' } };
 const computer = { endpoint: 'https://fcm.googleapis.com/fcm/send/computer', keys: { p256dh: 'p', auth: 'a' } };
 await anfrage(push, 'POST', { body: { id: idM, geheim: gM, aktion: 'abo', abo: handy } });

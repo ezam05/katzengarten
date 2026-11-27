@@ -78,3 +78,41 @@ Herausfinden, ob eine Person, die die App zum ersten Mal sieht, ohne Erklärung 
 - 2–3 Personen aus der Zielgruppe (Freundinnen, die zu wenig trinken), je 15 Minuten, eigenes Handy.
 - Gleiche Aufgaben 1–13, laut denken lassen, nicht helfen. Nach jeder Aufgabe: «Was hast du erwartet?»
 - Danach 1 Woche echt benutzen und am Ende fragen: Wie oft geöffnet? Ist die Katze abgehauen? Was hat genervt?
+
+---
+
+# Usertest 2 (eigener Test, 27.11.2026)
+
+Getestet von: Claude, frischer Blick (leere App, als hätte ich sie nie gesehen) · Persona «Lena», bekommt den Link, wählt die Glückskatze · Handy 390 × 844 und Laptop 1440 × 900 · Fassung vom 26.11. (mit Widget, Mitteilungen, Computer).
+
+## Gut
+
+- Willkommen erklärt die Idee in 5 Punkten, Katzenwahl ist hübsch und klar.
+- Trinken: Tropfen → 3 Grössen → «Mmh, Milch! +2,5 dl 😋», «Rückgängig» erscheint.
+- Streicheln: Augen zu, Herzen, «Schnurr… 💕», sehr stimmig. Antippen: «Miau! 😺».
+- Karte der Freundin: Katze, Wasser, Streak, Anstupsen auf einen Blick.
+
+## Befunde nach Wichtigkeit
+
+**Fehler**
+1. Lange Sprechblasen laufen links und rechts aus dem Bildschirm: Begrüssung («…allo Lena! Ich bin Mimi. Trink was…») und gerade die wichtige Balken-Erklärung («…Noch 9,08 l bis zum Kätzchen, 27,75 l bis gross (ca. 14 T…»).
+2. Am Laptop (so öffnen die Dozenten den Link aus der Mail) sieht man nur ein kleines Handy in der Mitte, ohne Titel, ohne Erklärung, ohne Hinweis «auf dem Handy öffnen».
+
+**Unklar**
+3. Fünf Knöpfe ohne Text: Katze oben rechts (= Freunde), Lautsprecher, Uhr (= Uhr, Widget **und Erinnerungen**), unten Haus (= Laden) und Pfote (= Garten). Die Erinnerung, das Kernstück gegen das Vergessen, versteckt sich hinter dem Uhr-Symbol.
+4. Die Zahl «7» am Tropfen bleibt rätselhaft, auch nach dem Willkommen-Text.
+5. Zweimal dieselbe Zahl: Holzschild «0,25 l» und Flasche «heute 0,25 l». Die Flasche sieht bei 0 l voll aus.
+6. «🍼 0/28 l» unter der Katze: 28 Liter wirkt erschreckend und ist ohne Antippen nicht verständlich. In der Erklärung stehen Zahlen wie «9,08 l».
+7. Mitteilungen findet eine neue Nutzerin nicht von selbst (nur im Freunde- oder Uhr-Blatt).
+8. «Trinkst du zu wenig, haut es ab»: Was «zu wenig» heisst (unter 1 l, oder zwei Tage unter 1,5 l), steht nirgends.
+
+**Wörter und Konzept**
+9. «Freunde» zeigt alle, die die App nutzen, auch Unbekannte.
+10. Jede Freundin hat dasselbe Gesichtsbild.
+11. Freunde / Freundin / Kollegin wechseln sich ab. «Meine Katze schicken» (alter Link-Weg) ist neben der Live-Liste überflüssig.
+12. Anstupsen-Hinweis «bekommt eine Mitteilung (oder du schickst ihr eine Nachricht)» klingt unsicher.
+13. Gelbes Plus neben den Münzen sieht aus wie «Münzen kaufen».
+
+## Umgesetzt (27.11.2026)
+
+Alle 13 Befunde, Entscheid Elyna. 1 Sprechblasen umbrechen · 2 Projekt-Seite am Laptop mit QR-Code · 3 Beschriftungen, Glocke «Erinnern» · 4 «noch 7 Gläser» unter dem Tropfen · 5 Holzschild «von 2 l heute», Flasche «Milch» · 6 Balken «Baby · noch 10 l», Erklärung mit einer Kommastelle · 7 nach dem ersten Glas «Soll ich dich erinnern?» · 8 Abhau-Regel mit Zahlen · 9 Freundinnen nur über Einladung (Server verbindet beide, Anstupsen nur unter Freundinnen, Freundschaft beenden) · 10 Anfangsbuchstabe statt gleichem Gesicht · 11 «Freundin» überall, «Meine Katze schicken» weg · 12 klarer Anstups-Hinweis · 13 Laden-Symbol statt Plus.

@@ -49,7 +49,7 @@ function startDaten() {
     angestupstUm: null,    // wann ich die Freundin zuletzt angestupst habe
     // Beispiel-Freundin, bis der Server die echten Daten liefert
     freundin: {
-      beispiel: true,  // wird ersetzt, sobald eine echte Kollegin ihren Link schickt
+      beispiel: true,  // wird ersetzt, sobald man eine echte Freundin antippt
       name: 'Lea', katzenName: 'Lilo', artId: 'glueck', milch: 16000, status: 'waechst',
       streak: 5, heuteMl: 1400, letzteTrinkZeit: null, stand: null,
       garten: [
@@ -257,29 +257,49 @@ const STREICHEL_SAETZE = ['Schnurr… 💕', 'Prrrr… 😻', 'Mehr! 😽', 'Das
 
 // ---------- Sprechblase ----------
 
+const BLASE_MAX = 318; // breiteste Textzeile in der Szene (390 breit); längere Sätze brechen um
+
 function zeigeBlase(text, dringend, ansagen = true) {
-  const hoehe = 40;
-  const y = Math.max(KATZE_Y - katzenHoehe * KATZE_MASS - 10, 150);
   const fuellung = dringend ? 'var(--orange)' : 'var(--gelb)';
   const schrift = dringend ? '#FFFFFF' : '#4A3410';
-  const breite = Math.min(330, text.length * 8.4 + 34);
+  el.blase.innerHTML = `<g class="blase-inhalt">
+      <rect class="blase-grund" rx="20" fill="${fuellung}"/>
+      <path class="blase-spitze" fill="${fuellung}"/>
+      <rect class="blase-glanz" height="5" rx="2.5" fill="#fff" opacity=".28"/>
+      <text class="t-blase" text-anchor="middle" fill="${schrift}"></text>
+    </g>`;
+  const t = el.blase.querySelector('text');
+  const mass = (s) => {
+    t.textContent = s;
+    try { return t.getComputedTextLength() || s.length * 8.4; } catch { return s.length * 8.4; }
+  };
+  // Wort für Wort auf Zeilen verteilen
+  const zeilen = [];
+  let zeile = '';
+  for (const wort of String(text).split(' ')) {
+    const probe = zeile ? `${zeile} ${wort}` : wort;
+    if (zeile && mass(probe) > BLASE_MAX) { zeilen.push(zeile); zeile = wort; } else zeile = probe;
+  }
+  if (zeile) zeilen.push(zeile);
+  const breite = Math.min(BLASE_MAX, Math.max(...zeilen.map(mass))) + 34;
+  const ZEILE = 19;
+  const hoehe = 21 + zeilen.length * ZEILE;
+  const oben = -hoehe - 9;
+  t.textContent = '';
+  zeilen.forEach((z, i) => {
+    const sp = document.createElementNS('http://www.w3.org/2000/svg', 'tspan');
+    sp.setAttribute('x', 0);
+    sp.setAttribute('y', oben + 25 + i * ZEILE);
+    sp.textContent = z;
+    t.appendChild(sp);
+  });
+  const y = Math.max(KATZE_Y - katzenHoehe * KATZE_MASS - 10, 150 + hoehe - 40);
   const x = Math.min(Math.max(KATZE_X, breite / 2 + 12), 390 - breite / 2 - 12);
   el.blase.setAttribute('transform', `translate(${x} ${y})`);
-  el.blase.innerHTML = `<g class="blase-inhalt">
-      <rect class="blase-grund" x="${-breite / 2}" y="${-hoehe - 9}" width="${breite}" height="${hoehe}" rx="20" fill="${fuellung}"/>
-      <path d="M${KATZE_X - x - 9} -10 L${KATZE_X - x} 0 L${KATZE_X - x + 9} -10Z" fill="${fuellung}"/>
-      <rect class="blase-glanz" x="${-breite / 2 + 12}" y="${-hoehe - 5}" width="${breite - 24}" height="5" rx="2.5" fill="#fff" opacity=".28"/>
-      <text class="t-blase" x="0" y="${-hoehe / 2 - 3}" text-anchor="middle" fill="${schrift}">${text}</text>
-    </g>`;
-  try { // Breite an die echte Textlänge anpassen
-    const echt = el.blase.querySelector('text').getComputedTextLength() + 34;
-    const grund = el.blase.querySelector('.blase-grund');
-    grund.setAttribute('width', echt);
-    grund.setAttribute('x', -echt / 2);
-    const glanz = el.blase.querySelector('.blase-glanz');
-    glanz.setAttribute('width', echt - 24);
-    glanz.setAttribute('x', -echt / 2 + 12);
-  } catch { /* Schätzung bleibt */ }
+  const setze = (sel, attr) => { const e = el.blase.querySelector(sel); for (const [k, v] of Object.entries(attr)) e.setAttribute(k, v); };
+  setze('.blase-grund', { x: -breite / 2, y: oben, width: breite, height: hoehe });
+  setze('.blase-glanz', { x: -breite / 2 + 12, y: oben + 4, width: breite - 24 });
+  setze('.blase-spitze', { d: `M${KATZE_X - x - 9} -10 L${KATZE_X - x} 0 L${KATZE_X - x + 9} -10Z` });
   if (ansagen) el.ansage.textContent = text;
 }
 
@@ -314,10 +334,10 @@ function zeigeName(name) {
 // Die Flasche zeigt, wie viel Milch das Kätzchen heute schon bekommen hat (voll = 2 l)
 function zeigeFlasche() {
   const ml = heuteGefuettert();
-  const h = Math.round(58 * Math.min(1, Math.max(0.15, ml / ZIEL_ML)));
+  const h = Math.round(58 * Math.min(1, Math.max(0.04, ml / ZIEL_ML)));
   el.flascheMilch.setAttribute('y', -4 - h);
   el.flascheMilch.setAttribute('height', h);
-  el.flascheText.textContent = `heute ${liter(ml)}`;
+  el.flascheText.textContent = 'Milch'; // die Menge steht schon auf dem Holzschild
   el.flasche.setAttribute('aria-label', `Milchflasche: heute ${liter(ml)} Milch bekommen. Milch gibt es automatisch, wenn du trinkst.`);
 }
 
@@ -359,11 +379,14 @@ function zeichne() {
   const anteil = Math.min(1, daten.katze.milch / bisGross);
   const breite = 134 * anteil;
   el.balkenFuellung.setAttribute('width', breite > 0 && breite < 18 ? 18 : breite);
-  el.balkenText.textContent = `🍼 ${zahl(daten.katze.milch / 1000)}/${bisGross / 1000} l`;
+  // Stufe und wie viel Wasser bis zur nächsten Stufe (statt «0/28 l», Befund Usertest 2)
+  const st = stufe();
+  const bisNaechste = Math.max(0, milchFuerStufe(Math.min(3, st + 1), bisGross) - daten.katze.milch);
+  el.balkenText.textContent = st >= 3 ? 'Gross 🎉' : `${['Baby', 'Kätzchen', 'Jung'][st]} · noch ${Math.max(1, Math.ceil(bisNaechste / 1000))} l`;
 
   // Tropfen-Knopf: Gläser bis zum Ziel
   const n = glaeserBisZiel(ml);
-  el.tropfenZahl.textContent = n > 0 ? n : '✓';
+  el.tropfenZahl.textContent = n > 0 ? `noch ${n} ${n === 1 ? 'Glas' : 'Gläser'}` : 'Ziel erreicht ✓';
   el.tropfenKnopf.setAttribute('aria-label', `Getränk eintragen. Heute ${liter(ml)}. ` + (n > 0
     ? `Noch ${n} ${n === 1 ? 'Glas' : 'Gläser'} bis zum Ziel`
     : 'Ziel erreicht'));
@@ -507,6 +530,7 @@ function wachstumErklaeren() {
   const bisNaechste = milchFuerStufe(st + 1, bis) - k.milch;
   const rest = bis - k.milch;
   const tage = Math.ceil(rest / ZIEL_ML);
+  const liter = (ml) => `${String(Math.round(ml / 100) / 10).replace('.', ',')} l`; // eine Kommastelle reicht hier
   const naechste = st + 1 < 3 ? `Noch ${liter(bisNaechste)} bis ${STUFEN[st + 1] === 'Junge Katze' ? 'zur jungen Katze' : 'zum Kätzchen'}, ` : 'Noch ';
   kurzeBlase(`Ich bin ${st === 0 ? 'ein Baby' : st === 1 ? 'ein Kätzchen' : 'eine junge Katze'}. ${naechste}${liter(rest)} bis gross (ca. ${tage} ${tage === 1 ? 'Tag' : 'Tage'}) 🐾`, false, 5000);
 }
@@ -1487,7 +1511,26 @@ function trinken(ml) {
   el.ansage.textContent = `${dl(ml)} eingetragen. Heute ${liter(nachher)}.${portion > 0 ? ` Dein Kätzchen bekommt ${dl(portion)} Milch.` : ''}`;
 
   zeigeRueckgaengig();
+  setTimeout(erinnerungAnbieten, 5200); // nach Milch und Sprechblase
 }
+
+// Nach dem ersten Glas einmal fragen, ob die Katze erinnern soll (Befund Usertest 2: Mitteilungen findet man sonst nicht)
+async function erinnerungAnbieten() {
+  if (daten.erinnerungGefragt || !daten.gestartet) return;
+  if (kannMitteilungen() && (Notification.permission !== 'default' || await meinAbo())) return; // schon entschieden
+  const iphoneSafari = istIphone && !vomHomeBildschirm;
+  if (!kannMitteilungen() && !iphoneSafari) return; // Browser ohne Mitteilungen: nichts anbieten
+  daten.erinnerungGefragt = true;
+  speichern();
+  $('#erinnern-frage-text').textContent = iphoneSafari
+    ? `Leg Katzengarten auf den Home-Bildschirm (unten Teilen ⬆︎ → «Zum Home-Bildschirm») und öffne es von dort. Dann kann ${daten.katze.name} dich erinnern, wenn du 5 Stunden nichts getrunken hast.`
+    : `Hast du 5 Stunden nichts getrunken, meldet sich ${daten.katze.name} mit einer Mitteilung (nur 8–22 Uhr).`;
+  $('#erinnern-ja').hidden = iphoneSafari;
+  $('#erinnern-spaeter').textContent = iphoneSafari ? 'OK, mache ich' : 'Später';
+  $('#erinnern-frage').hidden = false;
+}
+$('#erinnern-ja').addEventListener('click', () => { $('#erinnern-frage').hidden = true; mitteilungenEinschalten(); });
+$('#erinnern-spaeter').addEventListener('click', () => { $('#erinnern-frage').hidden = true; });
 
 function rueckgaengig() {
   const tag = heute();
@@ -1861,6 +1904,17 @@ const meldungEl = $('#meldung');
 let meldungTimer = null;
 
 // rundes Bild der Freundin (eigene Zeichnung)
+// Anfangsbuchstabe auf einer Farbe, die zum Namen passt (statt für alle dasselbe Gesicht, Befund Usertest 2)
+function freundinGesicht(name) {
+  const farben = ['#F2734A', '#49B4F0', '#9B6BD6', '#3FAE6A', '#E0A13A', '#E5648F'];
+  const n = [...String(name || '?')].reduce((summe, z) => summe + z.codePointAt(0), 0);
+  const span = document.createElement('span');
+  span.className = 'gesicht';
+  span.style.background = farben[n % farben.length];
+  span.textContent = [...String(name || '?').trim()][0]?.toUpperCase() || '?';
+  return span.outerHTML;
+}
+
 const FREUNDIN_BILD = `<svg viewBox="0 0 60 60">
   <rect width="60" height="60" fill="#BFE6F5"/>
   <path d="M10 60 C 6 30 14 10 30 10 C 46 10 54 30 50 60Z" fill="#7A4A2C"/>
@@ -1926,7 +1980,7 @@ function zeichneFreundinKarte() {
   const bisGross = milchBisGross(art);
 
   freundinUi.titel.textContent = fr.name;
-  freundinUi.bild.innerHTML = FREUNDIN_BILD;
+  freundinUi.bild.innerHTML = fr.beispiel ? FREUNDIN_BILD : freundinGesicht(fr.name);
 
   const { svg } = zeichneKatze({ art, groesse: g, zustand: freundinBild(zustand) });
   freundinUi.katze.innerHTML = `${svg}
@@ -1940,9 +1994,10 @@ function zeichneFreundinKarte() {
   freundinUi.streak.textContent = fr.streak;
   const anzahl = (fr.garten || []).length;
   $('#fr-garten-knopf').textContent = `🐾 ${fr.name}s Katzengarten ansehen · ${anzahl}`;
-  freundinUi.zustand.textContent = `${FREUNDIN_SATZ[zustand](fr.katzenName, fr.name)} · 🍼 ${zahl(fr.milch / 1000)}/${bisGross / 1000} l`
+  freundinUi.zustand.textContent = `${FREUNDIN_SATZ[zustand](fr.katzenName, fr.name)} · ${STUFEN[stufeFuerMilch(fr.milch, bisGross)]}`
     + (fr.stand ? ` · Stand ${standText(fr.stand)}` : '');
   $('#fr-beispiel').hidden = !fr.beispiel;
+  $('#trennen-knopf').hidden = !!fr.beispiel || !fr.id;
   $('.freundin-blatt').classList.toggle('beispiel', !!fr.beispiel);
   zeichneAnstupsKnopf();
 }
@@ -1960,7 +2015,9 @@ function zeichneAnstupsKnopf() {
   }
   freundinUi.hinweis.textContent = fr.beispiel
     ? ''
-    : `${fr.name} bekommt eine Mitteilung (oder du schickst ihr eine Nachricht): «${daten.name || 'Deine Freundin'} stupst dich an 💧 Trink was!»`;
+    : fr.mitteilungen
+      ? `${fr.name} bekommt eine Mitteilung: «${daten.name || 'Deine Freundin'} stupst dich an 💧 Trink was!»`
+      : `${fr.name} hat keine Mitteilungen eingeschaltet. Du schickst ihr eine Nachricht (z. B. WhatsApp): «Trink was! 💧»`;
 }
 
 function oeffneFreundin() {
@@ -1983,7 +2040,7 @@ async function anstupsen() {
   // die Katze der Freundin hüpft kurz
   freundinUi.katze.querySelector('.katze')?.classList.add('federn');
   if (fr.beispiel) {
-    zeigeMeldung('Lea ist nur ein Beispiel. Lade deine Kollegin ein 📨', false);
+    zeigeMeldung('Lea ist nur ein Beispiel. Lade deine Freundin ein 📨', false);
     return;
   }
   const name = meinName();
@@ -2015,7 +2072,10 @@ async function anstupsen() {
 }
 
 function zeigeMeldung(text, mitBild = true) {
-  meldungEl.innerHTML = `${mitBild ? `<span class="freundin-bild" aria-hidden="true">${FREUNDIN_BILD}</span>` : ''}<span>${text}</span>`;
+  const fr = daten.freundin;
+  const bild = fr?.beispiel === false ? freundinGesicht(fr.name) : FREUNDIN_BILD;
+  meldungEl.innerHTML = `${mitBild ? `<span class="freundin-bild" aria-hidden="true">${bild}</span>` : ''}<span></span>`;
+  meldungEl.lastElementChild.textContent = text;
   meldungEl.hidden = false;
   clearTimeout(meldungTimer);
   meldungTimer = setTimeout(() => { meldungEl.hidden = true; }, 4000);
@@ -2153,15 +2213,16 @@ $('#script-kopieren').addEventListener('click', async () => {
   }
 });
 
-// ---------- Kollegin: einladen, Katze schicken, Katze der Kollegin übernehmen ----------
-// Jede hat ihre eigene Katze und ihren eigenen Garten (gespeichert auf ihrem Handy).
-// Ohne Server schickt man sich die Katze als Link; wer den Link öffnet, sieht sie unter «Freundin».
+// ---------- Freundin einladen und verbinden ----------
+// Jede hat ihre eigene Katze und ihren eigenen Garten. Der Einladungslink enthält die öffentliche Nummer;
+// wer ihn öffnet, wird auf dem Server mit der Einladenden verbunden (api/freunde.js) und beide sehen sich.
+// Alte Katzen-Links (#freundin=…) funktionieren weiter.
 
 const APP_URL = new URL('./', location.href).href;
 
 function meinName() {
   if (!daten.name) {
-    const n = sauber(prompt('Wie heisst du? Deine Kollegin sieht diesen Namen.', ''), 20);
+    const n = sauber(prompt('Wie heisst du? Deine Freundin sieht diesen Namen.', ''), 20);
     if (!n) return null;
     daten.name = n;
     speichern();
@@ -2194,7 +2255,7 @@ function pruefeFreundin(roh) {
   return {
     beispiel: false,
     id: istNummer(roh.i) ? roh.i : null, // mit Server: wird laufend neu geladen
-    name: sauber(roh.n, 20) || 'Kollegin',
+    name: sauber(roh.n, 20) || 'Freundin',
     katzenName: sauber(roh.k.n) || 'Kätzchen',
     artId: art.id,
     milch: zahlIn(roh.k.m, 0, milchBisGross(art)),
@@ -2209,8 +2270,36 @@ function pruefeFreundin(roh) {
   };
 }
 
-// Beim Öffnen: Kommt die App über einen Katzen-Link der Kollegin, diese als Freundin speichern
-function freundinAusLink() {
+// Mit einer Person auf dem Server verbinden (beide Seiten). Ergebnis: ihr Name oder null.
+async function verbinden(mit) {
+  try {
+    await hochladen(); // meine Nummer muss auf dem Server sein
+    const r = await api('freunde', { method: 'POST', body: JSON.stringify({ id: daten.konto.id, geheim: daten.konto.geheim, aktion: 'verbinden', mit }) });
+    return r.name || 'Deine Freundin';
+  } catch { return null; }
+}
+
+// Einladungslink (#einladung=<Nummer>): mit der Einladenden verbinden und ihre Katze zeigen
+async function einladungAusLink() {
+  const treffer = location.hash.match(/^#einladung=([0-9a-f-]{36})$/);
+  if (!treffer) return false;
+  history.replaceState(null, '', location.pathname + location.search);
+  const mit = treffer[1];
+  if (!istNummer(mit) || mit === daten.konto.id) return true;
+  const name = await verbinden(mit);
+  if (!name) { zeigeMeldung('Die Einladung hat nicht geklappt 😿 Hast du Internet?', false); return true; }
+  try {
+    const fr = pruefeFreundin(await api(`stand?id=${mit}`));
+    const zeile = (await api(`freunde?id=${daten.konto.id}`)).freunde?.find((f) => f.id === mit);
+    if (fr) { daten.freundin = { ...fr, id: mit, mitteilungen: !!zeile?.mitteilungen }; daten.angestupstUm = null; freundinUi.letzteMini = ''; speichern(); zeichne(); oeffneFreundin(); }
+  } catch { /* Karte später */ }
+  zeigeMeldung(`Du und ${name} seid jetzt Freundinnen 🐾`, true);
+  return true;
+}
+
+// Beim Öffnen: Kommt die App über einen Einladungs- oder (alten) Katzen-Link, verbinden bzw. als Freundin speichern
+async function freundinAusLink() {
+  if (await einladungAusLink()) return;
   const treffer = location.hash.match(/^#freundin=([A-Za-z0-9_-]{10,20000})$/);
   if (!treffer) return;
   history.replaceState(null, '', location.pathname + location.search);
@@ -2224,27 +2313,34 @@ function freundinAusLink() {
   speichern();
   zeichne();
   oeffneFreundin();
+  if (fr.id) verbinden(fr.id); // alter Link mit Nummer: auch auf dem Server befreunden
   abgleichen(); // gleich den neusten Stand holen
 }
 
 $('#einladen-knopf').addEventListener('click', async () => {
   const name = meinName();
   if (!name) return;
+  hochladen(); // damit die Einladung auf dem Server gefunden wird
   await teilen({
     titel: 'Katzengarten 🐾',
-    text: `${name} lädt dich ein: Hol dir dein eigenes Kätzchen und trink mit mir! 🐾💧`,
-    url: APP_URL,
-  }, 'Öffnet sie den Link, bekommt sie ihr eigenes Kätzchen und ihren eigenen Garten.');
+    text: `${name} lädt dich in den Katzengarten ein: Hol dir dein eigenes Kätzchen und trink mit mir! 🐾💧`,
+    url: `${APP_URL}#einladung=${daten.konto.id}`,
+  }, 'Öffnet sie den Link, bekommt sie ihr eigenes Kätzchen und ihr seid Freundinnen.');
 });
 
-$('#zeigen-knopf').addEventListener('click', async () => {
-  const name = meinName();
-  if (!name) return;
-  await teilen({
-    titel: `Meine Katze ${daten.katze.name} 🐾`,
-    text: `Das ist meine Katze ${daten.katze.name} mit meinem Katzengarten. Öffne den Link, dann siehst du sie bei dir unter «Freundin».`,
-    url: meineKatzeAlsLink(name),
-  }, 'Öffnet sie den Link, sieht sie deine Katze und deinen Garten.');
+// Freundschaft beenden (beide Seiten), danach wieder die Beispiel-Freundin
+$('#trennen-knopf').addEventListener('click', async () => {
+  const fr = daten.freundin;
+  if (!fr.id || !confirm(`Freundschaft mit ${fr.name} beenden? Ihr seht euch dann nicht mehr.`)) return;
+  try {
+    await api('freunde', { method: 'POST', body: JSON.stringify({ id: daten.konto.id, geheim: daten.konto.geheim, aktion: 'trennen', mit: fr.id }) });
+  } catch { zeigeMeldung('Das hat nicht geklappt 😿 Hast du Internet?', false); return; }
+  daten.freundin = startDaten().freundin;
+  freundinUi.letzteMini = '';
+  speichern();
+  zeichne();
+  schliesseFreundin();
+  zeigeMeldung(`Du und ${fr.name} seid keine Freundinnen mehr.`, false);
 });
 
 $('#uhr-knopf').addEventListener('click', oeffneGeraete);
@@ -2300,7 +2396,7 @@ $('#w-los').addEventListener('click', () => {
   letzteZeichnung = '';
   zeichne();
   kurzeBlase(`Hallo${daten.name ? ` ${daten.name}` : ''}! Ich bin ${daten.katze.name}. Trink was, dann krieg ich Milch 🍼`, false, 5000);
-  freundinAusLink(); // kam die App über den Katzen-Link einer Kollegin?
+  freundinAusLink(); // kam die App über eine Einladung oder einen Katzen-Link?
 });
 
 // ---------- Demo-Knopf: versteckt, 3× schnell auf das Holzschild tippen ----------
@@ -2391,7 +2487,7 @@ async function abgleichen() {
   try {
     const fr = pruefeFreundin(await api(`stand?id=${frId}`));
     if (fr) {
-      daten.freundin = { ...fr, id: frId };
+      daten.freundin = { ...fr, id: frId, mitteilungen: daten.freundin.mitteilungen };
       freundinUi.letzteMini = '';
       speichern();
       zeichne();
@@ -2530,6 +2626,7 @@ function zeichneFreunde(alle) {
     zeile.type = 'button';
     zeile.className = 'freund-zeile';
     zeile.dataset.id = f.id;
+    zeile.dataset.mitteilungen = f.mitteilungen ? '1' : '';
     const h = Math.max(60, hoehe + 8);
     zeile.innerHTML = `<svg class="freund-katze" viewBox="${rund(-h * 0.55)} ${rund(-h)} ${rund(h * 1.1)} ${rund(h * 1.05)}" aria-hidden="true">${svg}</svg>
       <span class="freund-text"><strong></strong><span class="freund-ml"></span><span class="freund-status"></span></span>`;
@@ -2545,14 +2642,14 @@ function zeichneFreunde(alle) {
 
 async function ladeFreunde() {
   try {
-    const { freunde: alle } = await api('freunde');
+    const { freunde: alle } = await api(`freunde?id=${daten.konto.id}`);
     serverDa = true;
-    freunde.leer.querySelector('p').textContent = 'Noch niemand da. Lade jemanden ein!';
+    freunde.leer.querySelector('p').textContent = 'Noch keine Freundin da. Lade jemanden ein!';
     zeichneFreunde(alle);
   } catch {
     freunde.liste.innerHTML = '';
     freunde.leer.hidden = false;
-    freunde.leer.querySelector('p').textContent = 'Keine Verbindung zum Server 😿 Die Freunde-Liste gibt es auf katzengarten.vercel.app.';
+    freunde.leer.querySelector('p').textContent = 'Keine Verbindung zum Server 😿 Die Freundinnen gibt es auf katzengarten.vercel.app.';
   }
 }
 
@@ -2575,14 +2672,14 @@ function schliesseFreunde() {
   freunde.zurueckFokus?.focus?.();
 }
 
-// Person antippen: ihren Stand holen und wie bei der Kollegin anzeigen (nur ansehen)
+// Freundin antippen: ihren Stand holen und ihre Karte zeigen
 freunde.liste.addEventListener('click', async (e) => {
   const zeile = e.target.closest('.freund-zeile');
   if (!zeile) return;
   try {
     const fr = pruefeFreundin(await api(`stand?id=${zeile.dataset.id}`));
     if (!fr) throw new Error('kaputt');
-    daten.freundin = { ...fr, id: zeile.dataset.id };
+    daten.freundin = { ...fr, id: zeile.dataset.id, mitteilungen: !!zeile.dataset.mitteilungen };
     daten.angestupstUm = null;
     freundinUi.letzteMini = '';
     speichern();
@@ -2603,7 +2700,7 @@ document.addEventListener('keydown', (e) => { if (e.key === 'Escape') schliesseF
 function zeigeTonKnopf() {
   tonAn(daten.ton);
   const k = $('#ton-knopf');
-  k.textContent = daten.ton ? '🔊' : '🔇';
+  k.querySelector('.ton-zeichen').textContent = daten.ton ? '🔊' : '🔇';
   k.setAttribute('aria-label', daten.ton ? 'Ton ausschalten' : 'Ton einschalten');
   k.setAttribute('aria-pressed', String(daten.ton));
 }

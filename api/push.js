@@ -2,7 +2,7 @@
 //   GET  ?aktion=schluessel                          → öffentlicher Schlüssel fürs Abo
 //   POST { id, geheim, aktion: 'abo', abo }          → Abo dieses Geräts speichern (Handy, Computer …, bis zu 5)
 //   POST { id, geheim, aktion: 'ab', endpoint? }     → Abo dieses Geräts löschen (ohne endpoint: alle)
-//   POST { id, geheim, aktion: 'stupsen', an }       → Freundin «an» anstupsen (Mitteilung)
+//   POST { id, geheim, aktion: 'stupsen', an }       → Freundin «an» anstupsen (Mitteilung), nur unter Freundinnen
 // Die Schlüssel (VAPID) erzeugt der Server beim ersten Mal selbst und legt sie in der Datenbank ab.
 import webpush from 'web-push';
 import { befehl, istId, pruefeGeheim, antwort, JAHR_S } from './_db.js';
@@ -94,6 +94,8 @@ export default async function handler(req, res) {
     if (aktion === 'stupsen') {
       const an = req.body.an;
       if (!istId(an) || an === id) return antwort(res, 400, { fehler: 'an fehlt' });
+      // nur Freundinnen dürfen sich anstupsen (api/freunde.js, «verbinden»)
+      if (!Number(await befehl('SISMEMBER', `freunde:${id}`, an))) return antwort(res, 403, { fehler: 'nicht befreundet' });
       const liste = aboListe(await befehl('GET', `push:${an}`));
       if (!liste.length) return antwort(res, 200, { ok: false, grund: 'kein-abo' });
       // höchstens alle 30 Minuten dieselbe Person
