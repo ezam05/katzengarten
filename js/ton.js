@@ -77,11 +77,11 @@ export function schnurrPuffer(a, zufall = Math.random) {
     const aus = zt < 1.2;
     const atem = aus ? Math.sin(Math.PI * zt / 1.2) ** 0.5
       : zt > 1.3 && zt < 2.05 ? 0.55 * Math.sin(Math.PI * (zt - 1.3) / 0.75) ** 0.5 : 0;
-    phase = (phase + (aus ? 26 : 23) / sr) % 1;
-    const stoss = Math.exp(-phase * 6);
+    phase = (phase + (aus ? 24 : 21) / sr) % 1;
+    const stoss = Math.sin(Math.PI * phase) ** 2; // runde, weiche Stösse (Wunsch Elyna: tiefer und weicher)
     const weiss = zufall() * 2 - 1;
     braun = (braun + 0.025 * weiss) / 1.025; // tiefes, weiches Rauschen
-    s[i] = (braun * 4 + weiss * 0.18) * stoss * atem;
+    s[i] = (braun * 4 + weiss * 0.04) * stoss * atem;
     groesster = Math.max(groesster, Math.abs(s[i]));
   }
   for (let i = 0; i < s.length; i++) s[i] /= groesster || 1;
@@ -94,13 +94,13 @@ export function baueSchnurren(a, ziel, t) {
   quelle.loop = true;
   const tief = a.createBiquadFilter();
   tief.type = 'lowpass';
-  tief.frequency.value = 950;
+  tief.frequency.value = 480;
   // Brustkorb klingt mit; etwas Mitte, damit man es auch auf Handy-Lautsprechern hört (die tiefe Töne kaum spielen)
   const bauch = a.createBiquadFilter();
   bauch.type = 'peaking';
-  bauch.frequency.value = 230;
+  bauch.frequency.value = 140;
   bauch.Q.value = 0.8;
-  bauch.gain.value = 7;
+  bauch.gain.value = 6;
   const lautstaerke = a.createGain();
   lautstaerke.gain.setValueAtTime(0.0001, t);
   lautstaerke.gain.exponentialRampToValueAtTime(0.7, t + 0.4);
