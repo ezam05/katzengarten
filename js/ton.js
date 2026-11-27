@@ -33,57 +33,128 @@ export function tonEntsperren() {
   q.start(0);
 }
 
-// Miau: Ton gleitet hoch und wieder runter, durch einen «Mund»-Filter
-export function miau({ hoch = 1, lang = 1 } = {}) {
-  const a = audio();
-  if (!a) return;
-  const t = a.currentTime, d = 0.55 * lang;
-  const osz = a.createOscillator();
-  osz.type = 'sawtooth';
-  osz.frequency.setValueAtTime(520 * hoch, t);
-  osz.frequency.linearRampToValueAtTime(880 * hoch, t + d * 0.35);
-  osz.frequency.linearRampToValueAtTime(600 * hoch, t + d);
+// Miau: wie eine Stimme gebaut. Ein Summton (Stimmbänder) läuft durch drei Filter (Mundraum, «Formanten»),
+// die von «m» über «i-a» nach «u» wandern. Dazu leichtes Zittern und etwas Hauch. Jedes Miau klingt etwas anders.
+export function baueMiau(a, ziel, t, { hoch = 1, lang = 1, zufall = Math.random } = {}) {
+  const z = 0.9 + zufall() * 0.22;               // Stimmlage dieser Katze
+  const d = (0.48 + zufall() * 0.25) * lang;     // Dauer
+  const f0 = 540 * hoch * z;
+  const stopp = t + d + 0.1;
+
+  const stimme = a.createOscillator();
+  stimme.type = 'sawtooth';
+  stimme.frequency.setValueAtTime(f0 * 0.82, t);
+  stimme.frequency.linearRampToValueAtTime(f0 * 1.42, t + d * 0.3);
+  stimme.frequency.linearRampToValueAtTime(f0 * 1.3, t + d * 0.55);
+  stimme.frequency.exponentialRampToValueAtTime(f0 * 0.78, t + d);
+  const zittern = a.createOscillator();
+  zittern.frequency.value = 5 + zufall() * 2;
+  const zitternTiefe = a.createGain();
+  zitternTiefe.gain.value = f0 * 0.018;
+  zittern.connect(zitternTiefe).connect(stimme.frequency);
+
+  // «m»: Mund zuerst fast zu, dann offen, am Schluss wieder etwas zu
   const mund = a.createBiquadFilter();
-  mund.type = 'bandpass';
-  mund.Q.value = 4;
-  mund.frequency.setValueAtTime(900, t);
-  mund.frequency.linearRampToValueAtTime(1800, t + d * 0.4); // «i-a-u»
-  mund.frequency.linearRampToValueAtTime(700, t + d);
+  mund.type = 'lowpass';
+  mund.frequency.setValueAtTime(450, t);
+  mund.frequency.exponentialRampToValueAtTime(4200, t + d * 0.18);
+  mund.frequency.exponentialRampToValueAtTime(1600, t + d);
+  stimme.connect(mund);
+
+  const summe = a.createGain();
+  summe.gain.value = 1;
+  // drei Formanten: [Start, Mitte («a»), Ende («u»), Stärke, Schärfe]
+  for (const [f1, f2, f3, staerke, q] of [[420, 880, 430, 1, 7], [2200, 1450, 850, 0.55, 9], [3000, 2800, 2500, 0.22, 10]]) {
+    const bp = a.createBiquadFilter();
+    bp.type = 'bandpass';
+    bp.Q.value = q;
+    bp.frequency.setValueAtTime(f1, t);
+    bp.frequency.linearRampToValueAtTime(f2, t + d * 0.4);
+    bp.frequency.linearRampToValueAtTime(f3, t + d);
+    const g = a.createGain();
+    g.gain.value = staerke * 3.2;
+    mund.connect(bp).connect(g).connect(summe);
+  }
+
+  // Hauch: leises Rauschen
+  const rausch = a.createBufferSource();
+  const puffer = a.createBuffer(1, Math.ceil(a.sampleRate * (d + 0.1)), a.sampleRate);
+  const r = puffer.getChannelData(0);
+  for (let i = 0; i < r.length; i++) r[i] = zufall() * 2 - 1;
+  rausch.buffer = puffer;
+  const hauchFilter = a.createBiquadFilter();
+  hauchFilter.type = 'bandpass';
+  hauchFilter.frequency.value = 2600;
+  hauchFilter.Q.value = 1.2;
+  const hauch = a.createGain();
+  hauch.gain.value = 0.05;
+  rausch.connect(hauchFilter).connect(hauch).connect(summe);
+
   const laut = a.createGain();
   laut.gain.setValueAtTime(0.0001, t);
-  laut.gain.exponentialRampToValueAtTime(0.35, t + 0.06);
-  laut.gain.setValueAtTime(0.35, t + d * 0.6);
+  laut.gain.exponentialRampToValueAtTime(0.42, t + 0.07);
+  laut.gain.linearRampToValueAtTime(0.36, t + d * 0.65);
   laut.gain.exponentialRampToValueAtTime(0.0001, t + d);
-  osz.connect(mund).connect(laut).connect(a.destination);
-  osz.start(t);
-  osz.stop(t + d + 0.05);
+  summe.connect(laut).connect(ziel);
+  for (const q of [stimme, zittern, rausch]) { q.start(t); q.stop(stopp); }
+  return d;
 }
 
-// Schnurren: tiefes Brummen, das 25-mal pro Sekunde pulsiert
+export function miau(optionen = {}) {
+  const a = audio();
+  if (a) baueMiau(a, a.destination, a.currentTime, optionen);
+}
+
+// Schnurren: rund 25 kleine Stösse pro Sekunde (tiefes Rauschen, das jedes Mal kurz anschlägt),
+// beim Ausatmen lauter, beim Einatmen leiser und etwas langsamer, dazwischen eine kurze Pause.
+// Zwei Atemzüge werden einmal berechnet und dann endlos wiederholt.
+const ATEMZUG = 2.1; // Sekunden
+export function schnurrPuffer(a, zufall = Math.random) {
+  const sr = a.sampleRate;
+  const puffer = a.createBuffer(1, Math.round(sr * ATEMZUG * 2), sr);
+  const s = puffer.getChannelData(0);
+  let braun = 0, phase = 0, groesster = 0;
+  for (let i = 0; i < s.length; i++) {
+    const zt = (i / sr) % ATEMZUG;
+    const aus = zt < 1.2;
+    const atem = aus ? Math.sin(Math.PI * zt / 1.2) ** 0.5
+      : zt > 1.3 && zt < 2.05 ? 0.55 * Math.sin(Math.PI * (zt - 1.3) / 0.75) ** 0.5 : 0;
+    phase = (phase + (aus ? 26 : 23) / sr) % 1;
+    const stoss = Math.exp(-phase * 6);
+    const weiss = zufall() * 2 - 1;
+    braun = (braun + 0.025 * weiss) / 1.025; // tiefes, weiches Rauschen
+    s[i] = (braun * 4 + weiss * 0.18) * stoss * atem;
+    groesster = Math.max(groesster, Math.abs(s[i]));
+  }
+  for (let i = 0; i < s.length; i++) s[i] /= groesster || 1;
+  return puffer;
+}
+
+export function baueSchnurren(a, ziel, t) {
+  const quelle = a.createBufferSource();
+  quelle.buffer = schnurrPuffer(a);
+  quelle.loop = true;
+  const tief = a.createBiquadFilter();
+  tief.type = 'lowpass';
+  tief.frequency.value = 950;
+  // Brustkorb klingt mit; etwas Mitte, damit man es auch auf Handy-Lautsprechern hört (die tiefe Töne kaum spielen)
+  const bauch = a.createBiquadFilter();
+  bauch.type = 'peaking';
+  bauch.frequency.value = 230;
+  bauch.Q.value = 0.8;
+  bauch.gain.value = 7;
+  const lautstaerke = a.createGain();
+  lautstaerke.gain.setValueAtTime(0.0001, t);
+  lautstaerke.gain.exponentialRampToValueAtTime(0.7, t + 0.4);
+  quelle.connect(tief).connect(bauch).connect(lautstaerke).connect(ziel);
+  quelle.start(t);
+  return { quellen: [quelle], lautstaerke };
+}
+
 export function schnurrenStart() {
   const a = audio();
   if (!a || schnurren) return;
-  const t = a.currentTime;
-  const brumm = a.createOscillator();
-  brumm.type = 'sawtooth';
-  brumm.frequency.value = 48;
-  const filter = a.createBiquadFilter();
-  filter.type = 'lowpass';
-  filter.frequency.value = 260;
-  const puls = a.createGain();
-  puls.gain.value = 0.5;
-  const pulsOsz = a.createOscillator();
-  pulsOsz.frequency.value = 25;
-  const pulsTiefe = a.createGain();
-  pulsTiefe.gain.value = 0.5;
-  pulsOsz.connect(pulsTiefe).connect(puls.gain);
-  const lautstaerke = a.createGain();
-  lautstaerke.gain.setValueAtTime(0.0001, t);
-  lautstaerke.gain.exponentialRampToValueAtTime(0.5, t + 0.3);
-  brumm.connect(filter).connect(puls).connect(lautstaerke).connect(a.destination);
-  brumm.start(t);
-  pulsOsz.start(t);
-  schnurren = { quellen: [brumm, pulsOsz], lautstaerke };
+  schnurren = baueSchnurren(a, a.destination, a.currentTime);
 }
 
 export function schnurrenStopp() {
