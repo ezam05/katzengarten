@@ -7,7 +7,7 @@
 //   name    – Anzeigename
 //   tage    – so viele Tage mit 2 Litern braucht das Baby, bis es gross ist
 //             (es braucht tage × 2 Liter Milch, pro Tag höchstens 2 Liter)
-//   preis   – Münzen zum Freischalten (= tage)
+//   preis   – Münzen zum Freischalten (halb so viele wie tage, aufgerundet; Wunsch Elyna 2026-11-27)
 //   gratis  – true: von Anfang an freigeschaltet
 //   satz    – kurzer Charakter-Satz für den Laden
 //   farben  – Farben der Figur
@@ -23,7 +23,7 @@
 
 export const ARTEN = [
   {
-    id: 'toast', name: 'Toastkatze', tage: 7, preis: 7, gratis: true,
+    id: 'toast', name: 'Toastkatze', tage: 7, preis: 4, gratis: true,
     satz: 'Kuschelt sich am liebsten in ihr Brot.',
     farben: {
       fell: '#F6BE78', fellDunkel: '#E19A55', bauch: '#FFF3DF', schnauze: '#FFF3DF',
@@ -34,7 +34,7 @@ export const ARTEN = [
     figur: { muster: 'tiger', schwanz: 'geringelt', extra: 'toast', strich: 1.8, augen: 'rund', mund: 'lachen', wangenGross: true, schnurrhaare: 3 },
   },
   {
-    id: 'tiger', name: 'Mollige Tigerkatze', tage: 10, preis: 10,
+    id: 'tiger', name: 'Mollige Tigerkatze', tage: 10, preis: 5,
     satz: 'Schaut immer nach oben, ob es Milch gibt.',
     farben: {
       fell: '#F1ECE4', fellDunkel: '#9E9893', bauch: '#FCF8F0', schnauze: '#FCF8F0',
@@ -45,7 +45,7 @@ export const ARTEN = [
     figur: { form: 'bohne', muster: 'tiger', schwanz: 'geringelt', augen: 'weiss', schnurrhaare: 'lang', tusche: true, aquarell: true, strich: 2.6 },
   },
   {
-    id: 'glueck', name: 'Glückskatze', tage: 14, preis: 14,
+    id: 'glueck', name: 'Glückskatze', tage: 14, preis: 7,
     satz: 'Dreifarbig, mit Glöckchen. Bringt Glück!',
     farben: {
       fell: '#FFFFFF', fellDunkel: '#ECE6DA', bauch: '#FFFFFF', fleckA: '#E5A86A', fleckB: '#3A3533',
@@ -56,7 +56,7 @@ export const ARTEN = [
     figur: { muster: 'dreifarbig', schwanz: 'normal', extra: 'gloeckchen', strich: 4, strichel: '30 3', augen: 'gross', mund: 'keiner', nase: 'tropfen', wangen: false, ohrStrich: true, ballen: true },
   },
   {
-    id: 'wolke', name: 'Wolkenkatze', tage: 21, preis: 21,
+    id: 'wolke', name: 'Wolkenkatze', tage: 21, preis: 11,
     satz: 'Flauschig wie eine Wolke, mit blauen Augen.',
     farben: {
       fell: '#F2F2F8', fellDunkel: '#C4BED8', bauch: '#FFFFFF',
@@ -67,7 +67,7 @@ export const ARTEN = [
     figur: { form: 'stehend', muster: 'stirn', schwanz: 'wolke', extra: 'maehne', kopfForm: 'flausch', augen: 'verlauf', strich: 1.8 },
   },
   {
-    id: 'tigerbaby', name: 'Kleiner Tiger', tage: 30, preis: 30,
+    id: 'tigerbaby', name: 'Kleiner Tiger', tage: 30, preis: 15,
     satz: 'Rund, gestreift und brüllt nur aus Spass.',
     farben: {
       fell: '#F08A2C', fellDunkel: '#D8741E', bauch: '#F7B25A', pfote: '#FFFFFF', schnauze: '#FFFFFF',
@@ -81,7 +81,7 @@ export const ARTEN = [
 
 // Foto-Katze «UU II AA» (Elynas GIFs, Hintergrund entfernt). 3× schnell antippen: die zweite Katze dreht sich.
 ARTEN.push({
-  id: 'tanzkatze', name: 'UU II AA', tage: 20, preis: 20,
+  id: 'tanzkatze', name: 'UU II AA', tage: 20, preis: 10,
   satz: 'Tanzt den ganzen Tag. Tipp 3× schnell drauf!',
   farben: { fell: '#B9AFA6', fellDunkel: '#8E847C', bauch: '#FFFFFF', streifen: '#6F6A66', umriss: '#3A3330', ohrInnen: '#F2B8B0', nase: '#E9A7B0', auge: '#1F1A18', wange: '#FFB0A8' },
   figur: {
