@@ -7,7 +7,7 @@
 // Die Daten kommen live vom Katzengarten-Server (gleicher Stand wie die App).
 //
 // Einrichten:
-// 1. In der Katzengarten-App: Uhr-Knopf \u{2192} \u{ab}Widget\u{bb} \u{2192} Widget-Code kopieren.
+// 1. In der Katzengarten-App: Knopf \u{ab}Erinnern\u{bb} (Glocke) \u{2192} Widget-Code kopieren.
 // 2. Homescreen gedr\u{fc}ckt halten \u{2192} \u{ff0b} \u{2192} Scriptable \u{2192} Gr\u{f6}sse w\u{e4}hlen \u{2192} hinzuf\u{fc}gen.
 // 3. Widget gedr\u{fc}ckt halten \u{2192} \u{ab}Widget bearbeiten\u{bb} \u{2192} Script: Katzengarten,
 //    Parameter: Widget-Code einf\u{fc}gen.
@@ -52,7 +52,7 @@ let code = findeCode(args.widgetParameter) || (Keychain.contains(SCHLUESSEL) ? f
 if (!config.runsInWidget && !findeCode(args.widgetParameter)) {
   const frage = new Alert();
   frage.title = 'Katzengarten-Widget';
-  frage.message = 'F\u{fc}ge deinen Widget-Code aus der App ein (Uhr-Knopf \u{2192} \u{ab}Widget\u{bb} \u{2192} Code kopieren).';
+  frage.message = 'F\u{fc}ge deinen Widget-Code aus der App ein (Knopf \u{ab}Erinnern\u{bb} \u{2192} Widget-Code kopieren).';
   frage.addTextField('Widget-Code', code || findeCode(Pasteboard.paste()) || '');
   frage.addAction('Speichern');
   frage.addCancelAction('Abbrechen');
@@ -350,7 +350,7 @@ async function katzenWidget(daten, offline, familie) {
 const familie = config.widgetFamily || 'medium';
 let widget;
 if (!code) {
-  widget = hinweisWidget('Widget-Code fehlt', 'In der App: Uhr-Knopf \u{2192} \u{ab}Widget\u{bb} \u{2192} Code kopieren. Dann dieses Script einmal in Scriptable \u{f6}ffnen und den Code einf\u{fc}gen.');
+  widget = hinweisWidget('Widget-Code fehlt', 'In der App: Knopf \u{ab}Erinnern\u{bb} \u{2192} Widget-Code kopieren. Dann dieses Script einmal in Scriptable \u{f6}ffnen und den Code einf\u{fc}gen.');
 } else {
   const { daten, offline } = await ladeStand(code);
   widget = daten

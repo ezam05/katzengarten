@@ -31,7 +31,7 @@ Entwicklung → GitHub (`ezam05/katzengarten`) → Vercel (Webseite und Server) 
 
 **Erinnerung:** Hast du 5 Stunden nichts getrunken und liegst hinter dem Plan zu 2 Litern, meldet sich deine Katze: «Mimi 🥺 – Ich hab Hunger auf Milch! Trink ein Glas Wasser 💧 Noch 1,4 l bis 2 l.» Nur 8–22 Uhr, höchstens alle 3 Stunden, nicht wenn die Katze abgehauen ist. Wasser von der Uhr zählt mit. Technik: `api/erinnern.js` (gleiche Regel wie in der App, `js/regeln.js`), aufgerufen alle 30 Minuten von GitHub Actions (`.github/workflows/erinnern.yml`, Passwort als Secret `ERINNERN_GEHEIM`).
 
-**Auch am Computer:** Uhr-Knopf → «💻 Link für den Computer schicken» → Link am Computer öffnen (Safari, Chrome oder Firefox) → «🔔 Erinnerungen auf diesem Gerät». Die Seite zeigt dieselbe Katze wie auf dem Handy (live, jede Minute neu) und man kann dort Wasser eintragen. Erinnerungen und Anstupsen kommen dann auf Handy und Computer (bis zu 5 Geräte pro Person). Antippen der Mitteilung am Computer öffnet diese Seite. Tipp für den Mac: in Safari «Ablage → Zum Dock hinzufügen».
+**Auch am Computer:** Glocke «Erinnern» → «💻 Link für den Computer schicken» → Link am Computer öffnen (Safari, Chrome oder Firefox) → «🔔 Erinnerungen auf diesem Gerät». Die Seite zeigt dieselbe Katze wie auf dem Handy (live, jede Minute neu) und man kann dort Wasser eintragen. Erinnerungen und Anstupsen kommen dann auf Handy und Computer (bis zu 5 Geräte pro Person). Antippen der Mitteilung am Computer öffnet diese Seite. Tipp für den Mac: in Safari «Ablage → Zum Dock hinzufügen».
 
 **Anstupsen:**
 Im Freunde-Blatt «🔔 Mitteilungen einschalten». Stupst dich danach eine Freundin an, kommt eine Mitteilung der App: «Mia stupst dich an 💧 – Trink was! Kiwi wartet auf Milch 🍼». Antippen öffnet die App. Auf dem iPhone geht das nur, wenn Katzengarten auf dem Home-Bildschirm liegt (ab iOS 16.4). Hat die Freundin keine Mitteilungen eingeschaltet, geht das Anstupsen wie früher als Nachricht über WhatsApp oder Nachrichten. Dieselbe Person kann man höchstens alle 30 Minuten anstupsen. Technik: `api/push.js` (Web Push mit `web-push`, Schlüssel liegen in der Datenbank), `sw.js` zeigt die Mitteilung.
@@ -40,7 +40,7 @@ Im Freunde-Blatt «🔔 Mitteilungen einschalten». Stupst dich danach eine Freu
 
 `widget/Katzengarten.js` für die Gratis-App Scriptable. Zeigt deine Katze in einem Wasser-Ring und **wie viel du heute noch trinken musst**, dazu Name, Stufe und Streak. Die Katze schaut hungrig, wenn du hinter dem Plan bist. Grössen: klein, mittel, gross (mit den Katzen aus dem Garten) und Sperrbildschirm.
 
-1. In der App: Uhr-Knopf → «Widget-Code kopieren».
+1. In der App: Glocke «Erinnern» → «Widget-Code kopieren».
 2. Script in Scriptable anlegen und einmal öffnen, den Code einfügen.
 3. Startbildschirm gedrückt halten → ＋ → Scriptable → Widget hinzufügen → Script «Katzengarten».
 
@@ -78,7 +78,7 @@ Regeln prüfen: `node tests/regeln.test.mjs`
 - **Freundin** (runder Knopf oben rechts): ihre Katze, ihr Wasserstand, Anstupsen, ihr Katzengarten.
 - **Kollegin einladen:** In der Freundin-Karte «📨 Kollegin einladen» schickt den Link zur App. Wer ihn öffnet, bekommt **eine eigene Katze und einen eigenen Garten** (gespeichert auf dem eigenen Handy). Mit «🐾 Meine Katze schicken» schickt man sich gegenseitig die eigene Katze samt Garten als Link. Öffnet die andere den Link, fragt die App «… als Freundin speichern?», danach sieht sie die Katze unter dem runden Knopf oben rechts und «… Katzengarten ansehen». Es ist ein Stand zum Zeitpunkt des Schickens. «Anstupsen» schickt eine Nachricht «Trink was! 💧».
 - **Abhauen:** Die Katze stirbt nie, aber sie haut ab, wenn du an einem Tag unter 1 l trinkst oder zwei Tage hintereinander unter 1,5 l. Vorher warnt sie («Trink heute mehr, sonst hau ich ab! 🧳»). Dann bleiben Pfotenspuren und ein Zettel. Mit **4 🪙 holst du sie zurück** (Milch bleibt, Streak ist weg), oder du holst ein neues Kätzchen.
-- **Apple Watch** (Uhr-Knopf unter der Freundin): schickt einen Link auf `uhr.html` mit deiner Katze und wie viel du heute noch trinken musst. Auf der Uhr den Link in Nachrichten antippen. Der Link zeigt den Stand vom Moment des Schickens; auf demselben Gerät zeigt `uhr.html` immer den aktuellen Stand.
+- **Apple Watch** (Glocke «Erinnern» unter dem Ton-Knopf): schickt einen Link auf `uhr.html` mit deiner Katze und wie viel du heute noch trinken musst. Auf der Uhr den Link in Nachrichten antippen. Der Link zeigt den Stand vom Moment des Schickens; auf demselben Gerät zeigt `uhr.html` immer den aktuellen Stand.
 
 ## Katzen
 

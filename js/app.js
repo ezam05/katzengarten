@@ -2158,7 +2158,7 @@ async function aufDieUhr() {
     'Schick den Link nur dir selbst (er enthält deine geheime Nummer) und tipp ihn auf der Uhr an ⌚');
 }
 
-// ---------- Uhr und Widget (Blatt hinter dem Uhr-Knopf) ----------
+// ---------- Erinnern, Uhr und Widget (Blatt hinter der Glocke «Erinnern») ----------
 // Das Scriptable-Widget (widget/Katzengarten.js) liest den Stand über die öffentliche Nummer.
 
 const geraete = { huelle: $('#geraete'), zurueckFokus: null };
