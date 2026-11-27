@@ -773,6 +773,12 @@ laden.raster.addEventListener('click', (e) => {
 laden.huelle.querySelectorAll('[data-schliessen]').forEach((x) => x.addEventListener('click', schliesseLaden));
 $('#leiste-laden').addEventListener('click', oeffneLaden);
 $('#plus-knopf').addEventListener('click', oeffneLaden);
+// 🎁 Geschenk-Code von Hand eintippen (die App auf dem iPhone-Home-Bildschirm kann keine Links mit Code öffnen)
+$('#geschenk-code-knopf').addEventListener('click', () => {
+  const code = (prompt('Geschenk-Code eingeben:', '') || '').trim();
+  if (/^[A-Za-z0-9_-]{8,64}$/.test(code)) geschenkEinloesen(code);
+  else if (code) zeigeMeldung('Dieser Geschenk-Code gilt nicht 😿', false);
+});
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape') schliesseLaden(); });
 
 // ---------- Katzengarten (schwebende Insel, isometrisch) ----------
@@ -2572,18 +2578,17 @@ document.addEventListener('pointerdown', (e) => {
 // Hier steht nur die Prüfsumme (SHA-256) des Codes, der Code selbst ist geheim.
 const GESCHENKE = {
   ea1692885ac742476a3f9eec9b14899daefb4a9ff34da63291c06547c3e1c7a6: 30, // 2026-11-21 für Elyna
+  '5c83cd329f6b024fb395ad94eaa46ba9228f0a0a65ca2ca12a40ae177d9308d5': 4, // 2026-11-27 für Elyna: Molli zurückholen
 };
 
-async function geschenkAusLink() {
-  const treffer = location.hash.match(/^#geschenk=([A-Za-z0-9_-]{8,64})$/);
-  if (!treffer) return;
-  history.replaceState(null, '', location.pathname + location.search);
+// Code einlösen (aus dem Link oder von Hand im Laden eingetippt)
+async function geschenkEinloesen(code) {
   try {
-    const roh = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(treffer[1]));
+    const roh = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(code));
     const summe = [...new Uint8Array(roh)].map((b) => b.toString(16).padStart(2, '0')).join('');
     const anzahl = GESCHENKE[summe];
     daten.geschenke ||= [];
-    if (!anzahl) { zeigeMeldung('Dieser Geschenk-Link gilt nicht 😿', false); return; }
+    if (!anzahl) { zeigeMeldung('Dieser Geschenk-Code gilt nicht 😿', false); return; }
     if (daten.geschenke.includes(summe)) { zeigeMeldung('Dieses Geschenk hast du schon bekommen 🎁', false); return; }
     daten.geschenke.push(summe);
     daten.muenzen += anzahl;
@@ -2591,6 +2596,13 @@ async function geschenkAusLink() {
     zeichne();
     zeigeMeldung(`🎁 Geschenk: +${anzahl} 🪙`, false);
   } catch { /* ohne Prüfsumme (sehr alter Browser): nichts tun */ }
+}
+
+async function geschenkAusLink() {
+  const treffer = location.hash.match(/^#geschenk=([A-Za-z0-9_-]{8,64})$/);
+  if (!treffer) return;
+  history.replaceState(null, '', location.pathname + location.search);
+  await geschenkEinloesen(treffer[1]);
 }
 window.addEventListener('hashchange', geschenkAusLink);
 
